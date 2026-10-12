@@ -30,6 +30,8 @@ namespace TwoDoors.Stages
         [SerializeField] float swingSpeed = 3f;
         [Tooltip("잠김 표시용으로 발광을 줄일 문짝 렌더러 (선택).")]
         [SerializeField] Renderer leaf;
+        [Tooltip("선택 가능할 때 발광 배율. 1보다 크면 빛 번짐(Bloom)이 생긴다.")]
+        [SerializeField] float openGlow = 1.8f;
         [SerializeField, Range(0f, 1f)] float lockedGlow = 0.2f;
 
         [SerializeField] UnityEvent onOpened;
@@ -74,7 +76,7 @@ namespace TwoDoors.Stages
                 hinge.localRotation = closedRotation * Quaternion.Euler(0f, openAngle * eased, 0f);
             }
 
-            glow = Mathf.MoveTowards(glow, IsOpen ? 1f : lockedGlow, Time.deltaTime * 2f);
+            glow = Mathf.MoveTowards(glow, IsOpen ? openGlow : lockedGlow, Time.deltaTime * 2f);
             if (leaf)
             {
                 block.SetColor(EmissionColor, leafEmission * glow);

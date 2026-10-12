@@ -9,6 +9,8 @@ using TwoDoors.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using Object = UnityEngine.Object;
 
 namespace TwoDoors.EditorTools
@@ -23,6 +25,7 @@ namespace TwoDoors.EditorTools
         const string SourceScene = "Assets/TwoDoors/Scenes/CharacterTest.unity";
         internal const string ScenePath = "Assets/CJW/Scenes/Game.unity";
         internal const string MaterialFolder = "Assets/CJW/Generated/Materials";
+        const string GameVolumePath = "Assets/CJW/Generated/GameVolume.asset";
         const string StageFolder = "Assets/CJW/Data/Stages";
         const string ZombiePrefab = "Assets/TwoDoors/Prefabs/Zombie.prefab";
 
@@ -70,6 +73,8 @@ namespace TwoDoors.EditorTools
             // 손전등·총구 화염 등 플레이어에 붙은 조명은 제외
             var roomLights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None)
                 .Where(l => !l.transform.IsChildOf(player.transform)).ToArray();
+            SetupAtmosphere(roomLights);
+            HideTestHeader();
 
             var root = new GameObject("StageSetup").transform;
             var managers = new GameObject("GameManager");
@@ -79,6 +84,8 @@ namespace TwoDoors.EditorTools
             var stages = managers.AddComponent<StageManager>();
             var hud = managers.AddComponent<StageDebugHud>();
             var fade = managers.AddComponent<ScreenFade>();
+            managers.AddComponent<DamageHealFeedback>();
+            var banner = managers.AddComponent<StageBanner>();
 
             var playerSpawn = Point("PlayerSpawn", root, player.transform.position, player.transform.rotation);
             var spawnRoot = new GameObject("ZombieSpawns").transform;
@@ -123,6 +130,11 @@ namespace TwoDoors.EditorTools
                 so.FindProperty("stages").objectReferenceValue = stages;
                 so.FindProperty("runner").objectReferenceValue = runner;
             });
+            Set(banner, so =>
+            {
+                so.FindProperty("stages").objectReferenceValue = stages;
+                so.FindProperty("runner").objectReferenceValue = runner;
+            });
 
             EditorSceneManager.SaveScene(scene);
             KeepGuid(ScenePath, previousGuid);
@@ -130,6 +142,59 @@ namespace TwoDoors.EditorTools
             AssetDatabase.SaveAssets();
             Selection.activeGameObject = managers;
             Debug.Log($"게임 씬 생성 완료: {ScenePath} (빌드 씬 목록에 등록)");
+        }
+
+        // 시작 화면과 이어지도록 방을 어둡고 탁하게. 복사본 씬의 조명 값만 바꾸고 원본 씬은 그대로 둔다.
+        static void SetupAtmosphere(Light[] roomLights)
+        {
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.13f, 0.14f, 0.17f);
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            RenderSettings.fogColor = new Color(0.02f, 0.022f, 0.028f);
+            RenderSettings.fogDensity = 0.04f;
+            foreach (var light in roomLights)
+            {
+                if (light.type == LightType.Directional) light.intensity *= 0.35f;
+                else light.color = new Color(0.85f, 0.88f, 1f);
+            }
+
+            var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(GameVolumePath);
+            if (!profile)
+            {
+                profile = ScriptableObject.CreateInstance<VolumeProfile>();
+                AssetDatabase.CreateAsset(profile, GameVolumePath);
+                var bloom = AddOverride<Bloom>(profile);
+                bloom.intensity.Override(0.9f);
+                bloom.threshold.Override(0.6f); // 어두운 방에서도 문이 번져 보이도록
+                var vignette = AddOverride<Vignette>(profile);
+                vignette.intensity.Override(0.38f);
+                vignette.smoothness.Override(0.4f);
+                var grain = AddOverride<FilmGrain>(profile);
+                grain.type.Override(FilmGrainLookup.Medium3);
+                grain.intensity.Override(0.25f);
+                var color = AddOverride<ColorAdjustments>(profile);
+                color.contrast.Override(12f);
+                color.saturation.Override(-10f);
+            }
+            var volume = new GameObject("PostProcess", typeof(Volume)).GetComponent<Volume>();
+            volume.isGlobal = true;
+            volume.sharedProfile = profile;
+        }
+
+        internal static T AddOverride<T>(VolumeProfile profile) where T : VolumeComponent
+        {
+            var component = profile.Add<T>(true);
+            component.name = typeof(T).Name;
+            AssetDatabase.AddObjectToAsset(component, profile);
+            return component;
+        }
+
+        // 캐릭터 테스트용 상단 제목 문구는 복사본 씬에서만 끈다
+        static void HideTestHeader()
+        {
+            foreach (var text in Object.FindObjectsByType<TMP_Text>(FindObjectsSortMode.None))
+                if (text.text.Contains("CHARACTER TEST")) text.gameObject.SetActive(false);
         }
 
         /// <summary>빌드 씬 목록에 남아 있는 이 경로의 GUID (씬을 지우고 다시 만들기 전 값).</summary>
