@@ -26,9 +26,9 @@ namespace TwoDoors.Editor
             var bag = player.GetComponent<PlayerInventory>();
             if (!bag) bag = player.gameObject.AddComponent<PlayerInventory>();
             var settings = new SerializedObject(bag);
-            settings.FindProperty("startWithPistol").boolValue = false;
+            settings.FindProperty("startWithPistol").boolValue = true;
             settings.FindProperty("startWithFlashlight").boolValue = false;
-            settings.FindProperty("startingAmmo").intValue = 0;
+            settings.FindProperty("startingAmmo").intValue = 30;
             settings.FindProperty("startingMedkits").intValue = 0;
             settings.ApplyModifiedPropertiesWithoutUndo();
             var position = player.transform.position;

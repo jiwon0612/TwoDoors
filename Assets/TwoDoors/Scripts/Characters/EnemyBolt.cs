@@ -10,7 +10,6 @@ namespace TwoDoors.Characters
         Vector3 direction;
         int damage;
         float remaining = 2f;
-        Material material;
 
         public static void Launch(EnemyCharacter owner, PlayerCharacter target, Vector3 origin, Vector3 direction, int damage)
         {
@@ -23,9 +22,8 @@ namespace TwoDoors.Characters
             var bolt = go.AddComponent<EnemyBolt>();
             bolt.owner = owner; bolt.target = target; bolt.direction = direction; bolt.damage = damage;
             bolt.worldPosition = origin; bolt.worldPositionInitialized = true;
-            bolt.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-            bolt.material.color = new Color(1f, 0.35f, 0.05f);
-            go.GetComponent<Renderer>().sharedMaterial = bolt.material;
+            var material = Resources.Load<Material>("Combat/EnemyBolt");
+            if (material) go.GetComponent<Renderer>().sharedMaterial = material;
         }
 
         void Update()
@@ -52,6 +50,5 @@ namespace TwoDoors.Characters
 
         Vector3 worldPosition;
         bool worldPositionInitialized;
-        void OnDestroy() { if (material) Destroy(material); }
     }
 }

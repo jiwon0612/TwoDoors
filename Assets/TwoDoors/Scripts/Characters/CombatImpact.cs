@@ -14,8 +14,9 @@ namespace TwoDoors.Characters
         {
             if (!sparkMaterial)
             {
-                sparkMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-                sparkMaterial.color = new Color(1, 0.65f, 0.18f);
+                sparkMaterial = Resources.Load<Material>("Combat/HitSpark");
+                // Visual failures must never interrupt the remaining shotgun pellets.
+                if (!sparkMaterial) return;
             }
             for (int i = 0; i < (kill ? 8 : 3); i++)
             {

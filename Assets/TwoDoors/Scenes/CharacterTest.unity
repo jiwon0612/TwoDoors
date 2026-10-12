@@ -6116,9 +6116,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6962f77db01e2194c9e46a482dbe6d62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Items.PlayerInventory
-  startWithPistol: 0
+  startWithPistol: 1
   startWithFlashlight: 0
-  startingAmmo: 0
+  startingAmmo: 30
   startingMedkits: 0
 --- !u!114 &548806938
 MonoBehaviour:
@@ -8294,7 +8294,7 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 0}
+  m_NavMeshData: {fileID: 23800000, guid: 2073b685ee4f60c48b4b8e64d30ec364, type: 2}
   m_BuildHeightMesh: 0
 --- !u!4 &775323700
 Transform:

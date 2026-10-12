@@ -35,7 +35,7 @@ namespace TwoDoors
 
         private void Update()
         {
-            if (Keyboard.current != null && Keyboard.current.f5Key.wasPressedThisFrame)
+            if (player && !player.IsDead && Keyboard.current != null && Keyboard.current.f5Key.wasPressedThisFrame)
             {
                 Time.timeScale = 1;
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);

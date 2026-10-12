@@ -1200,9 +1200,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6962f77db01e2194c9e46a482dbe6d62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Items.PlayerInventory
-  startWithPistol: 0
+  startWithPistol: 1
   startWithFlashlight: 0
-  startingAmmo: 0
+  startingAmmo: 30
   startingMedkits: 0
 --- !u!1 &2095410997500643543
 GameObject:

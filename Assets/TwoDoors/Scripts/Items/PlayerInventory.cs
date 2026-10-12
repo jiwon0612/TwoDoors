@@ -10,7 +10,7 @@ namespace TwoDoors.Items
     {
         [SerializeField] private bool startWithPistol = true;
         [SerializeField] private bool startWithFlashlight = true;
-        [SerializeField, Range(0, 210)] private int startingAmmo = 56;
+        [SerializeField, Range(0, 210)] private int startingAmmo = 30;
         [SerializeField, Range(0, 9)] private int startingMedkits = 1;
         private readonly int[] counts = new int[8];
         private bool initialized;
