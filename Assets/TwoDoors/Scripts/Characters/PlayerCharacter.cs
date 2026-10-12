@@ -1,9 +1,10 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TwoDoors.Items;
 
 namespace TwoDoors.Characters
 {
-    [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(CharacterController), typeof(PlayerInventory))]
     public sealed class PlayerCharacter : CharacterBase
     {
         [SerializeField] private Camera viewCamera;
@@ -25,9 +26,10 @@ namespace TwoDoors.Characters
         private float pitch, verticalSpeed, attackReady, reloadUntil, flashUntil, recoil;
         public Camera ViewCamera => viewCamera;
         public int Ammo { get; private set; } = 7;
-        public int ReserveAmmo { get; private set; } = 56;
+        public PlayerInventory Inventory { get; private set; }
+        public int ReserveAmmo => Inventory.Count(ItemKind.Ammo);
         public int SelectedSlot { get; private set; } = 1;
-        public int Medkits { get; private set; } = 3;
+        public int Medkits => Inventory.Count(ItemKind.Medkit);
         public bool IsReloading => reloadUntil > 0;
         public bool FlashlightOn => flashlight && flashlight.enabled;
         public bool IsPaused { get; private set; }
@@ -37,12 +39,15 @@ namespace TwoDoors.Characters
         {
             base.Awake();
             motor = GetComponent<CharacterController>();
+            Inventory = GetComponent<PlayerInventory>();
+            Inventory.Initialize();
             bodyAnimator = GetComponentInChildren<Animator>();
             if (!viewCamera) viewCamera = GetComponentInChildren<Camera>();
             if (weaponRoot) weaponOrigin = weaponRoot.localPosition;
-            Ammo = magazineSize;
+            Ammo = Inventory.Count(ItemKind.Pistol) > 0 ? magazineSize : 0;
             if (muzzleFlash) muzzleFlash.enabled = false;
-            SelectSlot(1);
+            SelectSlot(Inventory.Count(ItemKind.Pistol) > 0 ? 1 : 0);
+            if (flashlight) flashlight.enabled = false;
         }
 
         private void Start() => SetPaused(false);
@@ -55,7 +60,7 @@ namespace TwoDoors.Characters
                 {
                     int count = Mathf.Min(magazineSize - Ammo, ReserveAmmo);
                     Ammo += count;
-                    ReserveAmmo -= count;
+                    if (count > 0) Inventory.Consume(ItemKind.Ammo, count);
                     reloadUntil = 0;
                 }
                 if (muzzleFlash) muzzleFlash.enabled = Time.time < flashUntil;
@@ -63,7 +68,10 @@ namespace TwoDoors.Characters
             var keyboard = Keyboard.current;
             var mouse = Mouse.current;
             if (keyboard == null || mouse == null) return;
-            if (keyboard.escapeKey.wasPressedThisFrame && !IsDead) SetPaused(!IsPaused);
+            if (keyboard.escapeKey.wasPressedThisFrame && !IsDead)
+            {
+                if (Inventory.IsOpen) Inventory.Close(); else SetPaused(!IsPaused);
+            }
             if (IsDead || IsPaused || Cursor.lockState != CursorLockMode.Locked) return;
 
             Vector2 look = mouse.delta.ReadValue() * lookSensitivity;
@@ -83,7 +91,7 @@ namespace TwoDoors.Characters
             if (keyboard.digit2Key.wasPressedThisFrame) SelectSlot(1);
             if (keyboard.digit3Key.wasPressedThisFrame) UseMedkit();
             if (keyboard.digit4Key.wasPressedThisFrame || keyboard.fKey.wasPressedThisFrame)
-                if (flashlight) flashlight.enabled = !flashlight.enabled;
+                ToggleFlashlight();
             if (keyboard.rKey.wasPressedThisFrame) Reload();
             if (mouse.leftButton.wasPressedThisFrame) TryAttack();
             recoil = Mathf.MoveTowards(recoil, 0, Time.deltaTime * 3);
@@ -99,6 +107,7 @@ namespace TwoDoors.Characters
         public void SelectSlot(int slot)
         {
             if (IsDead) return;
+            if (slot < 0 || slot > 1 || Inventory.Count(slot == 0 ? ItemKind.Knife : ItemKind.Pistol) == 0) return;
             SelectedSlot = Mathf.Clamp(slot, 0, 1);
             reloadUntil = 0;
             if (pistol) pistol.SetActive(SelectedSlot == 1);
@@ -131,7 +140,21 @@ namespace TwoDoors.Characters
 
         public void UseMedkit()
         {
-            if (!IsDead && !IsPaused && Medkits > 0 && Heal(35) > 0) Medkits--;
+            if (IsDead || (IsPaused && !Inventory.IsOpen)) return;
+            if (Medkits == 0) { Inventory.Notify("No medkits"); return; }
+            int recovered = Heal(35);
+            if (recovered == 0) { Inventory.Notify("Health is already full"); return; }
+            Inventory.Consume(ItemKind.Medkit, 1);
+            Inventory.Notify($"Recovered {recovered} HP");
+        }
+
+        public void OnPistolCollected() { Ammo = magazineSize; SelectSlot(1); }
+
+        public void ToggleFlashlight()
+        {
+            if (IsDead || (IsPaused && !Inventory.IsOpen)) return;
+            if (Inventory.Count(ItemKind.Flashlight) == 0) { Inventory.Notify("Find a flashlight first"); return; }
+            if (flashlight) flashlight.enabled = !flashlight.enabled;
         }
 
         public void SetPaused(bool paused)
