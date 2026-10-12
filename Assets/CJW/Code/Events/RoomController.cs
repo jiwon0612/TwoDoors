@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TwoDoors.Characters;
 using UnityEngine;
 
 namespace TwoDoors.Events
@@ -6,30 +7,45 @@ namespace TwoDoors.Events
     /// <summary>재사용하는 기본 방 하나에 붙이는 IRoomContext 구현.</summary>
     public class RoomController : MonoBehaviour, IRoomContext
     {
+        [Tooltip("비워두면 씬에서 자동으로 찾는다.")]
+        [SerializeField] PlayerCharacter player;
+
         [Header("조명")]
         [SerializeField] Light[] roomLights;
         [SerializeField, Range(0f, 1f)] float darkAmbientIntensity = 0.05f;
 
         [Header("좀비")]
-        [SerializeField] GameObject defaultZombiePrefab;
+        [Tooltip("NavMesh가 구워진 방이어야 추적한다.")]
+        [SerializeField] EnemyCharacter defaultZombiePrefab;
         [SerializeField] Transform[] zombieSpawnPoints;
 
         [Header("기믹")]
         [SerializeField] RoomButton[] buttons;
         [SerializeField] HealZone healZone;
 
-        readonly List<GameObject> spawnedZombies = new();
+        readonly List<EnemyCharacter> spawnedZombies = new();
         float defaultAmbientIntensity;
+        // CharacterBase 체력은 정수라서, 회복 구역처럼 프레임마다 들어오는 소수 변화량을 모았다가 적용한다.
+        float pendingHealth;
+
+        public PlayerCharacter Player => player;
 
         void Awake()
         {
+            if (!player) player = FindFirstObjectByType<PlayerCharacter>();
             defaultAmbientIntensity = RenderSettings.ambientIntensity;
             ResetRoom();
         }
 
         public void ChangeHealth(float amount)
         {
-            // TODO: 플레이어 체력 컴포넌트가 들어오면 연결
+            pendingHealth += amount;
+            int whole = (int)pendingHealth;
+            if (whole == 0) return;
+
+            pendingHealth -= whole;
+            if (whole > 0) player.Heal(whole);
+            else player.TakeDamage(-whole);
         }
 
         public void SetLights(bool on)
@@ -38,7 +54,7 @@ namespace TwoDoors.Events
             RenderSettings.ambientIntensity = on ? defaultAmbientIntensity : darkAmbientIntensity;
         }
 
-        public void SpawnZombies(GameObject prefab, int count)
+        public void SpawnZombies(EnemyCharacter prefab, int count)
         {
             if (prefab == null) prefab = defaultZombiePrefab;
             if (prefab == null || zombieSpawnPoints.Length == 0)
@@ -50,7 +66,9 @@ namespace TwoDoors.Events
             for (int i = 0; i < count; i++)
             {
                 var point = zombieSpawnPoints[i % zombieSpawnPoints.Length];
-                spawnedZombies.Add(Instantiate(prefab, point.position, point.rotation, transform));
+                var zombie = Instantiate(prefab, point.position, point.rotation, transform);
+                zombie.SetTarget(player);
+                spawnedZombies.Add(zombie);
             }
         }
 
@@ -82,10 +100,11 @@ namespace TwoDoors.Events
         public void ResetRoom()
         {
             SetLights(true);
-            foreach (var z in spawnedZombies) if (z != null) Destroy(z);
+            foreach (var z in spawnedZombies) if (z != null) Destroy(z.gameObject);
             spawnedZombies.Clear();
             foreach (var b in buttons) b.SetActive(false);
             SetHealZoneActive(false);
+            pendingHealth = 0f;
         }
     }
 }

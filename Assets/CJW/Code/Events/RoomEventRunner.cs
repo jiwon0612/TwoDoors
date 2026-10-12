@@ -1,4 +1,5 @@
 using System;
+using TwoDoors.Characters;
 using UnityEngine;
 
 namespace TwoDoors.Events
@@ -20,16 +21,37 @@ namespace TwoDoors.Events
         public event Action<RoomEvent> Started;
         public event Action<RoomEvent> Completed;
 
-        // TODO: 플레이어 사망 시 Stop() 호출 연결.
-        //       단, 입장 효과(체력 감소)로 Begin() 도중 사망하면 Begin이 끝난 뒤에 Stop()해야
-        //       리셋 이후에 좀비가 스폰되는 일이 없다.
+        bool beginning;
+
+        // RoomController.Awake에서 플레이어를 찾은 뒤에 구독해야 하므로 Start에서 한다.
+        void Start() => room.Player.Died += OnPlayerDied;
+
+        void OnDestroy()
+        {
+            if (room && room.Player) room.Player.Died -= OnPlayerDied;
+        }
+
+        // Begin() 도중 사망하면 남은 입장 효과가 리셋 이후에 적용되므로, Begin이 끝난 뒤에 정리한다.
+        void OnPlayerDied(CharacterBase _)
+        {
+            if (!beginning) Stop();
+        }
 
         public void Run(RoomEvent roomEvent)
         {
             Stop();
             Current = roomEvent;
             Elapsed = 0f;
+
+            beginning = true;
             roomEvent.Begin(room);
+            beginning = false;
+
+            if (room.Player.IsDead)
+            {
+                Stop();
+                return;
+            }
 
             Started?.Invoke(roomEvent);
             if (roomEvent.IsCleared(room, 0f)) Complete();

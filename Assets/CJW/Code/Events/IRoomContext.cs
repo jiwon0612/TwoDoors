@@ -1,4 +1,4 @@
-using UnityEngine;
+using TwoDoors.Characters;
 
 namespace TwoDoors.Events
 {
@@ -11,7 +11,7 @@ namespace TwoDoors.Events
         void ChangeHealth(float amount);
         void SetLights(bool on);
         /// <param name="prefab">null이면 방의 기본 좀비 프리팹 사용.</param>
-        void SpawnZombies(GameObject prefab, int count);
+        void SpawnZombies(EnemyCharacter prefab, int count);
         void ActivateButtons(int count);
         int PressedButtonCount { get; }
         void SetHealZoneActive(bool active);

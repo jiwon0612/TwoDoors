@@ -6,12 +6,12 @@ using UnityEngine;
 namespace TwoDoors.EditorTools
 {
     /// <summary>
-    /// 기획된 11개 선택지를 Assets/Data/Stages 에 에셋으로 생성한다.
+    /// 기획된 11개 선택지를 Assets/CJW/Data/Stages 에 에셋으로 생성한다.
     /// 이미 있는 에셋은 덮어쓰지 않으므로, 생성 후 인스펙터에서 수치를 조절해도 안전하다.
     /// </summary>
     static class StageChoiceAssetGenerator
     {
-        const string Root = "Assets/Data/Stages";
+        const string Root = "Assets/CJW/Data/Stages";
 
         [MenuItem("Tools/TwoDoors/Generate Stage Choices")]
         static void Generate()

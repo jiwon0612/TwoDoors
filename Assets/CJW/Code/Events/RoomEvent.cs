@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TwoDoors.Characters;
 using UnityEngine;
 
 namespace TwoDoors.Events
@@ -19,7 +20,7 @@ namespace TwoDoors.Events
         [SerializeField] bool lightsOff;
         [SerializeField, Min(0)] int zombieCount;
         [Tooltip("비워두면 방의 기본 좀비 프리팹을 사용한다. 특수 좀비(시선 등)는 여기에 지정.")]
-        [SerializeField] GameObject zombiePrefab;
+        [SerializeField] EnemyCharacter zombiePrefab;
 
         [Header("클리어 후 결과")]
         [SerializeField] bool skipNextStage;
@@ -32,7 +33,7 @@ namespace TwoDoors.Events
         public int HealthChange => healthChange;
         public bool LightsOff => lightsOff;
         public int ZombieCount => zombieCount;
-        public GameObject ZombiePrefab => zombiePrefab;
+        public EnemyCharacter ZombiePrefab => zombiePrefab;
         public bool SkipNextStage => skipNextStage;
         public bool EscapeOnClear => escapeOnClear;
 
