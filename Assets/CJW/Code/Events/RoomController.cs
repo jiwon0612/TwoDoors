@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TwoDoors.Characters;
 using TwoDoors.Items;
@@ -129,11 +130,20 @@ namespace TwoDoors.Events
         public void ResetRoom()
         {
             SetLights(true);
-            foreach (var z in spawnedZombies) if (z != null) Destroy(z.gameObject);
+            foreach (var z in spawnedZombies) if (z != null) StartCoroutine(DestroyNextFrame(z.gameObject));
             spawnedZombies.Clear();
             foreach (var b in buttons) b.SetActive(false);
             SetHealZoneActive(false);
             pendingHealth = 0f;
+        }
+
+        // 적의 공격(그 적의 Update 안)으로 플레이어가 죽으면 같은 프레임에 ResetRoom이 불린다.
+        // 바로 Destroy하면 그 적의 NavMeshAgent가 즉시 무효가 되어, 이어지는 EnemyCharacter.Update(김우진)가
+        // isStopped를 호출하다 오류가 난다. 그래서 한 프레임 뒤에 지운다.
+        static IEnumerator DestroyNextFrame(GameObject enemy)
+        {
+            yield return null;
+            if (enemy) Destroy(enemy);
         }
     }
 }

@@ -6,6 +6,7 @@ using TwoDoors.Characters;
 using TwoDoors.Events;
 using TwoDoors.Stages;
 using TwoDoors.UI;
+using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -26,6 +27,7 @@ namespace TwoDoors.EditorTools
         internal const string ScenePath = "Assets/CJW/Scenes/Game.unity";
         internal const string MaterialFolder = "Assets/CJW/Generated/Materials";
         const string GameVolumePath = "Assets/CJW/Generated/GameVolume.asset";
+        const string NavMeshPath = "Assets/CJW/Generated/GameNavMesh.asset";
         const string StageFolder = EventCatalogV2.Root;
         const string ZombiePrefab = "Assets/TwoDoors/Prefabs/Zombie.prefab";
 
@@ -137,6 +139,7 @@ namespace TwoDoors.EditorTools
                 so.FindProperty("runner").objectReferenceValue = runner;
             });
 
+            BakeNavMesh(player);
             EditorSceneManager.SaveScene(scene);
             KeepGuid(ScenePath, previousGuid);
             ApplyBuildOrder();
@@ -256,6 +259,24 @@ namespace TwoDoors.EditorTools
             volume.isGlobal = true;
             volume.sharedProfile = profile;
             return added.ToArray();
+        }
+
+        // CharacterTest의 NavMeshSurface는 데이터 연결이 끊겨 있어(복사본도 마찬가지) 좀비가 움직이지 못한다.
+        // 꾸민 방(기둥·문 포함) 기준으로 새로 구워 우리 폴더에 저장한다. 원본 씬/에셋은 그대로 둔다.
+        static void BakeNavMesh(PlayerCharacter player)
+        {
+            var surface = Object.FindFirstObjectByType<NavMeshSurface>();
+            if (!surface) throw new InvalidOperationException("씬에서 NavMeshSurface를 찾지 못했습니다.");
+
+            surface.collectObjects = CollectObjects.All; // 방 밖에 추가한 기둥·벽 조각도 반영
+            surface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
+            player.gameObject.SetActive(false); // 플레이어 캡슐이 바닥에 구멍을 내지 않도록
+            try { surface.BuildNavMesh(); }
+            finally { player.gameObject.SetActive(true); }
+
+            if (AssetDatabase.LoadAssetAtPath<Object>(NavMeshPath)) AssetDatabase.DeleteAsset(NavMeshPath);
+            AssetDatabase.CreateAsset(surface.navMeshData, NavMeshPath);
+            EditorUtility.SetDirty(surface);
         }
 
         static void DoorSpill(Transform parent, float x, Color color)
