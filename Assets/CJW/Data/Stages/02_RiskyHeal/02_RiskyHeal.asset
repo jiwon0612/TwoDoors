@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1ea2cb12a8261f459e0f224bb9a50ba, type: 3}
+  m_Name: 02_RiskyHeal
+  m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.StageChoice
+  title: "\uC704\uD5D8\uD55C \uCE58\uB8CC"
+  redDoor: {fileID: 11400000, guid: 6dc6c75aac3116740a2091bade6cce68, type: 2}
+  blueDoor: {fileID: 11400000, guid: 622e00bb8f8187948bd996324e51d212, type: 2}
