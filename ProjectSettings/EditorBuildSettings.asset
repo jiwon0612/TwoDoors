@@ -6,8 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/CJW/Scenes/Title.unity
+    guid: cbef90a58972d2148a70c7723a7efdb5
+  - enabled: 1
     path: Assets/CJW/Scenes/Game.unity
-    guid: 935af88454ccbe24e9f4ca8f19017357
+    guid: 6d73f95c1cf842d499fa68975be34e8b
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05

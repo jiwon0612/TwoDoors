@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using TwoDoors.Characters;
 using TwoDoors.Events;
+using TwoDoors.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -34,6 +36,8 @@ namespace TwoDoors.Stages
         [SerializeField] StageDoor blueDoor;
         [Tooltip("문을 통과하면 플레이어가 이동할 방 시작 위치.")]
         [SerializeField] Transform playerSpawnPoint;
+        [Tooltip("문 통과 시 암전으로 순간이동을 가린다 (선택).")]
+        [SerializeField] ScreenFade fade;
 
         public StagePhase Phase { get; private set; }
         public int StageIndex { get; private set; }
@@ -88,9 +92,17 @@ namespace TwoDoors.Stages
             var roomEvent = color == DoorColor.Red ? CurrentStage.RedDoor : CurrentStage.BlueDoor;
             Phase = StagePhase.Running;
             CloseDoors();
-            MovePlayerToSpawn();
             DoorChosen?.Invoke(color, roomEvent);
+            StartCoroutine(EnterRoom(roomEvent));
+        }
+
+        // 암전 → 방 시작 위치로 이동 → 이벤트 시작 → 밝아짐. 생존 타이머는 이동 후부터 흐른다.
+        IEnumerator EnterRoom(RoomEvent roomEvent)
+        {
+            if (fade) yield return fade.FadeTo(1f, 0.3f);
+            MovePlayerToSpawn();
             runner.Run(roomEvent);
+            if (fade) yield return fade.FadeTo(0f, 0.45f);
         }
 
         /// <summary>게임오버·탈출 화면의 "다시 시작" 버튼용. 체력까지 처음 상태로 돌아간다.</summary>
