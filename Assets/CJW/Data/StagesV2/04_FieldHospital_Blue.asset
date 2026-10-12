@@ -15,7 +15,7 @@ MonoBehaviour:
   enemyGroups: []
   entryItems:
   - kind: 2
-    amount: 21
+    amount: 7
   clearItems: []
   healthChange: -20
   lightsOff: 0

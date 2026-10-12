@@ -13,5 +13,15 @@ namespace TwoDoors.Events
         public string Title => title;
         public RoomEvent RedDoor => redDoor;
         public RoomEvent BlueDoor => blueDoor;
+
+        public StageChoice CreateForRun(int clearedRooms, bool swapColors)
+        {
+            var copy = CreateInstance<StageChoice>();
+            copy.hideFlags = HideFlags.DontSave;
+            copy.title = title;
+            copy.redDoor = (swapColors ? blueDoor : redDoor).CreateForDifficulty(clearedRooms);
+            copy.blueDoor = (swapColors ? redDoor : blueDoor).CreateForDifficulty(clearedRooms);
+            return copy;
+        }
     }
 }

@@ -37,10 +37,13 @@ namespace TwoDoors.Stages
 
         public StagePhase Phase { get; private set; }
         public int StageIndex { get; private set; }
+        public int ClearedRooms { get; private set; }
+        StageChoice[] runOrder;
+        StageChoice runtimeStage;
         /// <summary>HUD 표시용 1부터 시작하는 단계 번호.</summary>
         public int StageNumber => StageIndex + 1;
         public int TotalStages => stages.Length;
-        public StageChoice CurrentStage => StageIndex < stages.Length ? stages[StageIndex] : null;
+        public StageChoice CurrentStage => runtimeStage;
 
         /// <summary>새 단계의 문이 열렸을 때. (단계 번호, 선택지)</summary>
         public event Action<int, StageChoice> StageOpened;
@@ -60,6 +63,13 @@ namespace TwoDoors.Stages
 
             runner.Completed += OnEventCompleted;
             room.Player.Died += OnPlayerDied;
+            runOrder = (StageChoice[])stages.Clone();
+            // Shuffle balanced pairs without replacement; keep the escape pair last.
+            for (int i = runOrder.Length - 2; i > 0; i--)
+            {
+                int j = UnityEngine.Random.Range(0, i + 1);
+                (runOrder[i], runOrder[j]) = (runOrder[j], runOrder[i]);
+            }
             OpenStage(0);
         }
 
@@ -67,6 +77,7 @@ namespace TwoDoors.Stages
         {
             if (runner) runner.Completed -= OnEventCompleted;
             if (room && room.Player) room.Player.Died -= OnPlayerDied;
+            ReleaseRuntimeStage();
         }
 
         /// <summary>StageDoor가 플레이어 통과 시 호출한다.</summary>
@@ -93,6 +104,8 @@ namespace TwoDoors.Stages
         {
             if (Phase != StagePhase.Running) return;
 
+            ClearedRooms++;
+
             int next = StageIndex + (finished.SkipNextStage ? 2 : 1);
             if (finished.EscapeOnClear || next >= stages.Length)
             {
@@ -115,11 +128,22 @@ namespace TwoDoors.Stages
 
         void OpenStage(int index)
         {
+            ReleaseRuntimeStage();
             StageIndex = index;
+            runtimeStage = runOrder[index].CreateForRun(ClearedRooms, UnityEngine.Random.value < 0.5f);
             Phase = StagePhase.Choosing;
             redDoor.Open(CurrentStage.RedDoor.GetDescription());
             blueDoor.Open(CurrentStage.BlueDoor.GetDescription());
             StageOpened?.Invoke(StageNumber, CurrentStage);
+        }
+
+        void ReleaseRuntimeStage()
+        {
+            if (!runtimeStage) return;
+            Destroy(runtimeStage.RedDoor);
+            Destroy(runtimeStage.BlueDoor);
+            Destroy(runtimeStage);
+            runtimeStage = null;
         }
 
         void CloseDoors()

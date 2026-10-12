@@ -52,6 +52,42 @@ namespace TwoDoors.Events
         /// <summary>HUD에 남은 시간을 표시할 제한 시간. 0이면 타이머 없음.</summary>
         public virtual float Duration => 0f;
 
+        // Only runtime clones are adjusted; catalog assets remain unchanged between runs.
+        public RoomEvent CreateForDifficulty(int clearedRooms)
+        {
+            var copy = Instantiate(this);
+            copy.name = name;
+            copy.hideFlags = HideFlags.DontSave;
+            copy.enemyGroups = (EnemyGroup[])enemyGroups.Clone();
+            copy.customDescription = "";
+            copy.ApplyDifficulty(Mathf.Clamp(clearedRooms, 0, 8));
+            return copy;
+        }
+
+        protected virtual void ApplyDifficulty(int clearedRooms)
+        {
+            if (healthChange < 0) healthChange = -(20 + clearedRooms * 4 + (entryItems.Length > 0 ? 5 : 0));
+            if (enemyGroups.Length == 0) return;
+            bool kill = this is SurvivalEvent survival && survival.RequireAllKills;
+            float Weight(EnemyCharacter enemy) => enemy is GolemEnemy ? (kill ? 3.5f : 1.8f) : enemy is ZombieEnemy ? 1.6f : 1f;
+            float original = 0;
+            foreach (var group in enemyGroups) original += group.count * Weight(group.prefab);
+            float budget = (6f + clearedRooms * 1.3f) * (lightsOff ? 0.85f : 1f);
+            if (this is HealZoneEvent) budget *= 1.2f;
+            if (clearItems.Length > 0) budget *= 1.1f;
+            for (int i = 0; i < enemyGroups.Length; i++)
+                enemyGroups[i].count = Mathf.Max(1, Mathf.RoundToInt(enemyGroups[i].count * budget / Mathf.Max(1f, original)));
+            // Keep every archetype present while respecting the arena's tested spawn capacity.
+            while (EnemyCount > 14)
+            {
+                int largest = 0;
+                for (int i = 1; i < enemyGroups.Length; i++)
+                    if (enemyGroups[i].count > enemyGroups[largest].count) largest = i;
+                if (enemyGroups[largest].count <= 1) break;
+                enemyGroups[largest].count--;
+            }
+        }
+
         public virtual void Begin(IRoomContext ctx)
         {
             if (healthChange != 0) ctx.ChangeHealth(healthChange);

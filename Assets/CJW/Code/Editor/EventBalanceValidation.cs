@@ -16,6 +16,9 @@ namespace TwoDoors.EditorTools
         public static string Validate()
         {
             int checkedEvents = 0;
+            int supplyEvents = 0, killEvents = 0, survivalEvents = 0;
+            var soloTypes = new System.Collections.Generic.HashSet<Type>();
+            int mixedEvents = 0;
             foreach (var id in EventCatalogV2.Order)
             {
                 var choice = AssetDatabase.LoadAssetAtPath<StageChoice>($"{EventCatalogV2.Root}/{id}.asset");
@@ -23,6 +26,33 @@ namespace TwoDoors.EditorTools
                 foreach (var ev in new[] { choice.RedDoor, choice.BlueDoor })
                 {
                     Require(ev, id + " missing event");
+                    var settings = new SerializedObject(ev);
+                    bool suppliesWeapon = false;
+                    foreach (var field in new[] { "entryItems", "clearItems" })
+                    {
+                        var grants = settings.FindProperty(field);
+                        for (int i = 0; i < grants.arraySize; i++)
+                        {
+                            var kind = (ItemKind)grants.GetArrayElementAtIndex(i).FindPropertyRelative("kind").enumValueIndex;
+                            Require(!(ev is InstantEvent && ev.HealthChange < 0 && kind == ItemKind.Pistol), ev.name + ": health toll must not grant a pistol");
+                            suppliesWeapon |= kind == ItemKind.Pistol || kind == ItemKind.Ammo || kind == ItemKind.Medkit;
+                        }
+                    }
+                    if (suppliesWeapon) supplyEvents++;
+                    if (ev is SurvivalEvent combat)
+                    {
+                        var groups = settings.FindProperty("enemyGroups");
+                        if (groups.arraySize == 1)
+                            soloTypes.Add(groups.GetArrayElementAtIndex(0).FindPropertyRelative("prefab").objectReferenceValue.GetType());
+                        else mixedEvents++;
+                        if (combat.RequireAllKills) killEvents++;
+                        else
+                        {
+                            survivalEvents++;
+                            Require(ev.Duration > 0 && ev.Duration <= 40, ev.name + ": survival exceeds 40 seconds");
+                            Require(ev.EnemyCount >= (groups.arraySize == 1 ? 6 : 10), ev.name + ": survival wave too small");
+                        }
+                    }
                     // Both sufficient-payment and empty-inventory routes must have a real cost.
                     foreach (bool supplied in new[] { false, true })
                     {
@@ -36,10 +66,16 @@ namespace TwoDoors.EditorTools
                             float after = ctx.Health + ctx.Items[(int)ItemKind.Medkit] * 35;
                             Require(after <= before || ctx.SpentAmmo > 0, ev.name + ": free net healing");
                         }
-                        else if (ev is SurvivalEvent)
+                        else if (ev is SurvivalEvent survival)
                         {
                             Require(!ev.IsCleared(ctx, 0), ev.name + ": premature clear");
-                            Require(ev.IsCleared(ctx, ev.Duration), ev.name + ": timer did not clear");
+                            if (survival.RequireAllKills)
+                            {
+                                Require(ev.Duration == 0, ev.name + ": kill event has timer");
+                                ctx.AliveEnemyCount = 1;
+                                Require(!ev.IsCleared(ctx, 9999), ev.name + ": kill event cleared with one survivor");
+                            }
+                            else Require(ev.IsCleared(ctx, ev.Duration), ev.name + ": timer did not clear");
                             ctx.AliveEnemyCount = 0;
                             Require(ev.IsCleared(ctx, 0), ev.name + ": wipe did not clear");
                         }
@@ -56,7 +92,58 @@ namespace TwoDoors.EditorTools
                     checkedEvents++;
                 }
             }
-            return $"PASS {checkedEvents} events: paid/insufficient inventory economy, timer/wipe, continuous healing";
+            Require(supplyEvents == 10, "Health/weapon/ammo grants should occur in 10 of 18 choices (previously 6)");
+            Require(soloTypes.Contains(typeof(ZombieEnemy)) && soloTypes.Contains(typeof(GolemEnemy)) && soloTypes.Contains(typeof(MannequinEnemy)), "Each enemy needs a single-type event");
+            Require(mixedEvents > 0, "Keep mixed combat events");
+            Require(killEvents > 0 && survivalEvents > 0, "Both combat objectives must exist");
+            ValidateDifficulty();
+            return $"PASS {checkedEvents} events: {killEvents} kill-only, {survivalEvents} survival (max 40s), 3 solo types plus mixed waves, {supplyEvents} health/weapon/ammo grants; economy, timer/wipe, continuous healing";
+        }
+
+        static void ValidateDifficulty()
+        {
+            foreach (var id in EventCatalogV2.Order)
+            {
+                var stage = AssetDatabase.LoadAssetAtPath<StageChoice>($"{EventCatalogV2.Root}/{id}.asset");
+                foreach (var source in new[] { stage.RedDoor, stage.BlueDoor })
+                {
+                    string before = EditorJsonUtility.ToJson(source);
+                    int lastCount = 0;
+                    float lastDuration = 0;
+                    for (int tier = 0; tier <= 8; tier++)
+                    {
+                        var ev = source.CreateForDifficulty(tier);
+                        try
+                        {
+                            Require(ev.EnemyCount >= lastCount && ev.EnemyCount <= 14, ev.name + ": invalid enemy progression");
+                            Require(ev.Duration >= lastDuration && ev.Duration <= 40, ev.name + ": invalid timer progression");
+                            var ctx = new Context();
+                            ev.Begin(ctx);
+                            if (ev is SurvivalEvent survival)
+                            {
+                                Require(!ev.IsCleared(ctx, 0), ev.name + ": early clear");
+                                Require(ev.IsCleared(ctx, 40) != survival.RequireAllKills, ev.name + ": incorrect timer objective");
+                                ctx.AliveEnemyCount = 0;
+                                Require(ev.IsCleared(ctx, 0), ev.name + ": scaled wipe failed");
+                            }
+                            if (ev is InstantEvent && ctx.IsPlayerAlive)
+                            {
+                                ev.OnCleared(ctx);
+                                Require(ctx.Health + ctx.Items[(int)ItemKind.Medkit] * 35 <= 100, ev.name + ": scaled trade grants free healing");
+                            }
+                            lastCount = ev.EnemyCount;
+                            lastDuration = ev.Duration;
+                        }
+                        finally { UnityEngine.Object.DestroyImmediate(ev); }
+                    }
+                    Require(EditorJsonUtility.ToJson(source) == before, "Difficulty mutated a catalog asset");
+                }
+                var swapped = stage.CreateForRun(0, true);
+                Require(swapped.RedDoor.name == stage.BlueDoor.name && swapped.BlueDoor.name == stage.RedDoor.name, "Door color swap failed");
+                UnityEngine.Object.DestroyImmediate(swapped.RedDoor);
+                UnityEngine.Object.DestroyImmediate(swapped.BlueDoor);
+                UnityEngine.Object.DestroyImmediate(swapped);
+            }
         }
 
         static void Require(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }

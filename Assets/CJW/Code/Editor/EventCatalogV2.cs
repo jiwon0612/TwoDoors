@@ -20,32 +20,32 @@ namespace TwoDoors.EditorTools
         {
             System.IO.Directory.CreateDirectory(Root);AssetDatabase.Refresh();
             Stage(0,"무장할 대가",
-                Event<InstantEvent>(0,"Red",hp:-30,entry:new[]{Grant(ItemKind.Pistol,1),Grant(ItemKind.Ammo,28)}),
-                Event<SurvivalEvent>(0,"Blue",time:25,mannequins:5,entry:new[]{Grant(ItemKind.Pistol,1),Grant(ItemKind.Ammo,7)},reward:new[]{Grant(ItemKind.Ammo,14)}));
+                Event<InstantEvent>(0,"Red",hp:-30,entry:new[]{Grant(ItemKind.Ammo,14)}),
+                Event<SurvivalEvent>(0,"Blue",kill:true,mannequins:5,entry:new[]{Grant(ItemKind.Pistol,1),Grant(ItemKind.Ammo,7)}));
             Stage(1,"떼거리 vs 공성전",
-                Event<SurvivalEvent>(1,"Red",time:18,mannequins:9),
-                Event<SurvivalEvent>(1,"Blue",time:55,golems:4));
+                Event<SurvivalEvent>(1,"Red",time:22,zombies:8,reward:new[]{Grant(ItemKind.Medkit,1)}),
+                Event<SurvivalEvent>(1,"Blue",time:40,golems:6,reward:new[]{Grant(ItemKind.Pistol,1),Grant(ItemKind.Ammo,7)}));
             Stage(2,"빛을 살 것인가",
-                Event<SurvivalEvent>(2,"Red",time:30,mannequins:7,dark:true,entry:new[]{Grant(ItemKind.Flashlight,1)},reward:new[]{Grant(ItemKind.Ammo,14)}),
+                Event<SurvivalEvent>(2,"Red",kill:true,mannequins:7,dark:true,entry:new[]{Grant(ItemKind.Flashlight,1)},reward:new[]{Grant(ItemKind.Ammo,7)}),
                 Event<InstantEvent>(2,"Blue",hp:-35));
             Stage(3,"야전 병원",
-                Event<HealZoneEvent>(3,"Red",time:40,golems:3,mannequins:2,healRate:8f),
-                Event<InstantEvent>(3,"Blue",hp:-20,entry:new[]{Grant(ItemKind.Ammo,21)}));
+                Event<HealZoneEvent>(3,"Red",time:40,zombies:2,golems:4,mannequins:4,healRate:8f),
+                Event<InstantEvent>(3,"Blue",hp:-20,entry:new[]{Grant(ItemKind.Ammo,7)}));
             Stage(4,"보급품 통행료",
                 Event<ItemTradeEvent>(4,"Red",skip:true,payment:ItemKind.Medkit,price:2,penalty:75),
-                Event<SurvivalEvent>(4,"Blue",time:50,golems:3,mannequins:5,reward:new[]{Grant(ItemKind.Medkit,1)}));
+                Event<SurvivalEvent>(4,"Blue",time:40,zombies:3,golems:4,mannequins:5,reward:new[]{Grant(ItemKind.Medkit,1)}));
             Stage(5,"탄약 환전소",
                 Event<ItemTradeEvent>(5,"Red",payment:ItemKind.Ammo,price:28,penalty:50,reward:new[]{Grant(ItemKind.Medkit,1)}),
-                Event<SurvivalEvent>(5,"Blue",time:40,mannequins:7,zombies:2,reward:new[]{Grant(ItemKind.Ammo,35)}));
+                Event<SurvivalEvent>(5,"Blue",kill:true,mannequins:5,zombies:2,reward:new[]{Grant(ItemKind.Ammo,21)}));
             Stage(6,"달리거나 지불하거나",
                 Event<ButtonEvent>(6,"Red",mannequins:7,golems:1,dark:true,entry:new[]{Grant(ItemKind.Flashlight,1)}),
                 Event<InstantEvent>(6,"Blue",hp:-40));
             Stage(7,"피의 보급 상자",
-                Event<InstantEvent>(7,"Red",hp:-45,entry:new[]{Grant(ItemKind.Ammo,42)}),
-                Event<SurvivalEvent>(7,"Blue",time:60,zombies:2,golems:3,mannequins:5,reward:new[]{Grant(ItemKind.Ammo,28)}));
+                Event<InstantEvent>(7,"Red",hp:-45,entry:new[]{Grant(ItemKind.Ammo,21)}),
+                Event<SurvivalEvent>(7,"Blue",time:40,zombies:3,golems:4,mannequins:6));
             Stage(8,"최후의 탈출",
                 Event<ItemTradeEvent>(8,"Red",payment:ItemKind.Medkit,price:2,penalty:80,escape:true),
-                Event<SurvivalEvent>(8,"Blue",time:70,golems:4,mannequins:6,entry:new[]{Grant(ItemKind.Ammo,14)},escape:true));
+                Event<SurvivalEvent>(8,"Blue",time:40,zombies:3,golems:5,mannequins:6,escape:true));
             AssetDatabase.SaveAssets();
         }
 
@@ -80,13 +80,13 @@ namespace TwoDoors.EditorTools
             var choice=Asset<StageChoice>($"{Root}/{Order[index]}.asset");var so=new SerializedObject(choice);
             so.FindProperty("title").stringValue=title;so.FindProperty("redDoor").objectReferenceValue=red;so.FindProperty("blueDoor").objectReferenceValue=blue;so.ApplyModifiedPropertiesWithoutUndo();
         }
-        static RoomEvent Event<T>(int index,string color,int hp=0,float time=0,int zombies=0,int golems=0,int mannequins=0,bool dark=false,bool skip=false,bool escape=false,float healRate=0,ItemKind payment=ItemKind.Medkit,int price=1,int penalty=35,RoomEvent.ItemGrant[] entry=null,RoomEvent.ItemGrant[] reward=null) where T:RoomEvent
+        static RoomEvent Event<T>(int index,string color,int hp=0,float time=0,int zombies=0,int golems=0,int mannequins=0,bool dark=false,bool skip=false,bool escape=false,float healRate=0,ItemKind payment=ItemKind.Medkit,int price=1,int penalty=35,RoomEvent.ItemGrant[] entry=null,RoomEvent.ItemGrant[] reward=null,bool kill=false) where T:RoomEvent
         {
             var ev=Asset<T>($"{Root}/{Order[index]}_{color}.asset");var so=new SerializedObject(ev);
             so.FindProperty("healthChange").intValue=hp;so.FindProperty("lightsOff").boolValue=dark;
             so.FindProperty("zombieCount").intValue=0;so.FindProperty("zombiePrefab").objectReferenceValue=null;
             so.FindProperty("customDescription").stringValue="";so.FindProperty("skipNextStage").boolValue=skip;so.FindProperty("escapeOnClear").boolValue=escape;
-            if(ev is SurvivalEvent) so.FindProperty("surviveTime").floatValue=time;
+            if(ev is SurvivalEvent){so.FindProperty("surviveTime").floatValue=time;so.FindProperty("requireAllKills").boolValue=kill;}
             if(ev is HealZoneEvent) so.FindProperty("healPerSecond").floatValue=healRate;
             if(ev is ButtonEvent) so.FindProperty("buttonCount").intValue=3;
             if(ev is ItemTradeEvent){so.FindProperty("payment").enumValueIndex=(int)payment;so.FindProperty("price").intValue=price;so.FindProperty("missingItemDamage").intValue=penalty;}

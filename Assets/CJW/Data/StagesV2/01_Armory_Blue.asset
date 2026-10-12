@@ -20,9 +20,7 @@ MonoBehaviour:
     amount: 1
   - kind: 2
     amount: 7
-  clearItems:
-  - kind: 2
-    amount: 14
+  clearItems: []
   healthChange: 0
   lightsOff: 0
   zombieCount: 0
@@ -30,4 +28,5 @@ MonoBehaviour:
   skipNextStage: 0
   escapeOnClear: 0
   customDescription: 
-  surviveTime: 25
+  surviveTime: 0
+  requireAllKills: 1

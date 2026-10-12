@@ -11,6 +11,13 @@ namespace TwoDoors.Events
         [SerializeField, Min(1)] int price = 1;
         [SerializeField, Min(1)] int missingItemDamage = 35;
 
+        protected override void ApplyDifficulty(int clearedRooms)
+        {
+            base.ApplyDifficulty(clearedRooms);
+            price = payment == ItemKind.Ammo ? 14 + (clearedRooms / 3) * 7 : 1 + clearedRooms / 4;
+            missingItemDamage = payment == ItemKind.Medkit ? price * 35 + 5 : 45 + clearedRooms * 3;
+        }
+
         public override void Begin(IRoomContext ctx)
         {
             if (!ctx.SpendItem(payment, price)) ctx.ChangeHealth(-missingItemDamage);

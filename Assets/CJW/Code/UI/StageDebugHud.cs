@@ -29,10 +29,12 @@ namespace TwoDoors.UI
             string text = $"단계 {stages.StageNumber} / {stages.TotalStages}";
             if (stages.CurrentStage != null) text += $"  ·  {stages.CurrentStage.Title}";
             if (runner.HasTimer) text += $"\n생존 {runner.RemainingTime:0.0}초";
+            else if (runner.Current is SurvivalEvent combat && combat.RequireAllKills) text += "\n섬멸 · 적 전원 처치";
             else if (stages.Phase == StagePhase.Running) text += "\n진행 중";
             else if (stages.Phase == StagePhase.Choosing) text += "\n문을 선택하세요";
             if (runner.IsRunning && runner.Current.EnemyCount > 0)
-                text += $"\n남은 적 {runner.AliveEnemyCount}마리 · 전원 처치로 조기 통과";
+                text += $"\n남은 적 {runner.AliveEnemyCount}마리" +
+                    (runner.Current is SurvivalEvent fight && fight.RequireAllKills ? " · 전원 처치 필수" : " · 전원 처치로 조기 통과");
 
             if (stages.Phase == StagePhase.Escaped) text = "탈출 성공!\nR  다시 시작";
             if (stages.Phase == StagePhase.GameOver) text = "사망\nR  다시 시작";

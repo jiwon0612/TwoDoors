@@ -14,10 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.InstantEvent
   enemyGroups: []
   entryItems:
-  - kind: 1
-    amount: 1
   - kind: 2
-    amount: 28
+    amount: 14
   clearItems: []
   healthChange: -30
   lightsOff: 0
