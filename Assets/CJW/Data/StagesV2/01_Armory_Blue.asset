@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: 01_Armory_Blue
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.SurvivalEvent
   enemyGroups:
-  - prefab: {fileID: 1427129230471473143, guid: 62262f0f75bb7e04fb4cd8bdef09e875, type: 3}
+  - prefab: {fileID: 1462608022789106231, guid: 9d81a39e1b91f794fb159d32713f6f16, type: 3}
     count: 5
   entryItems:
   - kind: 1

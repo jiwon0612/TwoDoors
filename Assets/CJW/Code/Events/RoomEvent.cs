@@ -20,7 +20,7 @@ namespace TwoDoors.Events
         public struct ItemGrant { public ItemKind kind; [Min(1)] public int amount; }
         [SerializeField] EnemyGroup[] enemyGroups = new EnemyGroup[0];
         [SerializeField] ItemGrant[] entryItems = new ItemGrant[0];
-        [SerializeField] ItemGrant[] clearItems = new ItemGrant[0];
+        [SerializeField, HideInInspector] ItemGrant[] clearItems = new ItemGrant[0];
         public int EnemyCount
         {
             get { int count = zombieCount; foreach (var group in enemyGroups) count += group.count; return count; }
@@ -68,13 +68,13 @@ namespace TwoDoors.Events
         {
             if (healthChange < 0) healthChange = -(20 + clearedRooms * 4 + (entryItems.Length > 0 ? 5 : 0));
             if (enemyGroups.Length == 0) return;
-            bool kill = this is SurvivalEvent survival && survival.RequireAllKills;
-            float Weight(EnemyCharacter enemy) => enemy is GolemEnemy ? (kill ? 3.5f : 1.8f) : enemy is ZombieEnemy ? 1.6f : 1f;
+            float Weight(EnemyCharacter enemy) => enemy is GolemEnemy ? 3f : enemy is MannequinEnemy ? 2.2f : 1.5f;
             float original = 0;
             foreach (var group in enemyGroups) original += group.count * Weight(group.prefab);
-            float budget = (6f + clearedRooms * 1.3f) * (lightsOff ? 0.85f : 1f);
+            float budget = (9f + clearedRooms * 1.8f) * (lightsOff ? 0.85f : 1f);
+            if (healthChange < 0 || this is ItemTradeEvent) budget *= 0.75f;
             if (this is HealZoneEvent) budget *= 1.2f;
-            if (clearItems.Length > 0) budget *= 1.1f;
+            if (entryItems.Length > 0 || clearItems.Length > 0) budget *= 1.1f;
             for (int i = 0; i < enemyGroups.Length; i++)
                 enemyGroups[i].count = Mathf.Max(1, Mathf.RoundToInt(enemyGroups[i].count * budget / Mathf.Max(1f, original)));
             // Keep every archetype present while respecting the arena's tested spawn capacity.
@@ -96,11 +96,12 @@ namespace TwoDoors.Events
             if (zombieCount > 0) ctx.SpawnZombies(zombiePrefab, zombieCount);
             foreach (var group in enemyGroups) if (group.count > 0) ctx.SpawnZombies(group.prefab, group.count);
             foreach (var item in entryItems) ctx.GiveItem(item.kind, item.amount);
+            // Legacy assets also deliver their former completion rewards on entry.
+            foreach (var item in clearItems) ctx.GiveItem(item.kind, item.amount);
         }
 
         public virtual void OnCleared(IRoomContext ctx)
         {
-            foreach (var item in clearItems) ctx.GiveItem(item.kind, item.amount);
         }
 
         public virtual void Tick(IRoomContext ctx, float elapsed, float deltaTime) { }
@@ -126,7 +127,7 @@ namespace TwoDoors.Events
                 lines.Add($"{(group.prefab is GolemEnemy ? "골렘" : group.prefab is MannequinEnemy ? "목각인형" : "좀비")} {group.count}마리 등장");
             foreach (var item in entryItems) lines.Add($"입장 보급: {ItemName(item.kind)} {item.amount}개");
             AppendConditionDescription(lines);
-            foreach (var item in clearItems) lines.Add($"통과 보상: {ItemName(item.kind)} {item.amount}개 (보유 한도까지)");
+            foreach (var item in clearItems) lines.Add($"입장 보급: {ItemName(item.kind)} {item.amount}개");
             if (skipNextStage) lines.Add("다음 선택 단계 하나 건너뛰기");
             if (escapeOnClear) lines.Add("탈출 성공");
             return string.Join("\n", lines);
@@ -136,7 +137,7 @@ namespace TwoDoors.Events
         public static string ItemName(ItemKind kind) => kind switch
         {
             ItemKind.Ammo => "예비 탄약", ItemKind.Medkit => "회복약", ItemKind.Pistol => "권총",
-            ItemKind.Flashlight => "손전등", _ => "칼"
+            ItemKind.Flashlight => "손전등", ItemKind.MachineGun => "기관총", ItemKind.Shotgun => "샷건", ItemKind.Machete => "마체테", _ => "칼"
         };
     }
 }

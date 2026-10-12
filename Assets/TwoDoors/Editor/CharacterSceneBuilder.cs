@@ -67,9 +67,11 @@ namespace TwoDoors.Editor
                 lamp.type = LightType.Point; lamp.range = 12; lamp.intensity = 3;
                 lamp.color = new Color(0.8f,0.88f,1); lamp.transform.position = new Vector3((i-1)*7,4,5);
             }
-            var mannequin = CreateEnemy<MannequinEnemy>("Mannequin", MakeMannequin(), new Vector3(-5,0,8),100,4.2f,12,0.45f,1.3f,1.6f);
-            var golem = CreateEnemy<GolemEnemy>("Golem", MakeGolem(), new Vector3(0,0,10),350,0.65f,35,0.95f,2.3f,2.0f);
-            var zombie = CreateEnemy<ZombieEnemy>("Zombie", MakeZombie(), new Vector3(5,0,8),120,9f,15,0.65f,1.7f,1.6f);
+            var mannequin = CreateEnemy<MannequinEnemy>("Mannequin", MakeMannequin(), new Vector3(-5,0,8),150,4.2f,20,0.6f,1.8f,14f);
+            mannequin.GetComponent<NavMeshAgent>().stoppingDistance = 0.3f;
+            PrefabUtility.SaveAsPrefabAsset(mannequin.gameObject, Root+"/Prefabs/Mannequin.prefab");
+            var golem = CreateEnemy<GolemEnemy>("Golem", MakeGolem(), new Vector3(0,0,10),500,3.2f,50,0.9f,1.9f,2.3f);
+            var zombie = CreateEnemy<ZombieEnemy>("Zombie", MakeZombie(), new Vector3(5,0,8),200,5.76f,25,0.65f,1.65f,1.9f);
             var player = MakePlayer();
             MakeHud(player);
             foreach (var enemy in new EnemyCharacter[]{mannequin,golem,zombie}) enemy.transform.rotation = Quaternion.Euler(0,180,0);
@@ -260,6 +262,8 @@ namespace TwoDoors.Editor
             var bounds=model.GetComponentInChildren<Renderer>().bounds;
             float scale=1.8f/bounds.size.y; model.transform.localScale=Vector3.one*scale;
             model.transform.localPosition=new Vector3(-bounds.center.x,-bounds.min.y,-bounds.center.z)*scale;
+            model.transform.localRotation = Quaternion.Euler(0, -90, 0);
+            model.transform.localPosition = model.transform.localRotation * model.transform.localPosition;
             return model;
         }
 
@@ -282,7 +286,7 @@ namespace TwoDoors.Editor
         private static T CreateEnemy<T>(string name,GameObject visual,Vector3 position,int hp,float speed,int damage,float windup,float cooldown,float range) where T:EnemyCharacter
         {
             var root=new GameObject(name); visual.transform.SetParent(root.transform,false);
-            var agent=root.AddComponent<NavMeshAgent>(); agent.speed=speed; agent.angularSpeed=240; agent.acceleration=10; agent.radius=name=="Golem"?0.65f:0.32f; agent.height=name=="Golem"?2.8f:1.85f;agent.stoppingDistance=range*0.8f;
+            var agent=root.AddComponent<NavMeshAgent>(); agent.speed=speed; agent.angularSpeed=360; agent.acceleration=20; agent.radius=name=="Golem"?0.65f:0.32f; agent.height=name=="Golem"?2.8f:1.85f;agent.stoppingDistance=range*0.8f;
             var collider=root.AddComponent<CapsuleCollider>();collider.height=agent.height;collider.radius=agent.radius;collider.center=Vector3.up*agent.height*0.5f;
             var enemy=root.AddComponent<T>(); Set(enemy,"maxHealth",hp);Set(enemy,"animator",visual.GetComponent<Animator>());Set(enemy,"attackDamage",damage);Set(enemy,"windup",windup);Set(enemy,"attackCooldown",cooldown);Set(enemy,"attackRange",range);
             PrefabUtility.SaveAsPrefabAsset(root,Root+"/Prefabs/"+name+".prefab"); root.transform.position=position;return enemy;
@@ -310,6 +314,7 @@ namespace TwoDoors.Editor
             var flash=new GameObject("MuzzleFlash").AddComponent<Light>();flash.type=LightType.Point;flash.color=new Color(1,0.65f,0.2f);flash.intensity=5;flash.range=4;flash.transform.SetParent(hands,false);flash.transform.localPosition=Vector3.forward*0.3f;flash.enabled=false;
             Set(player,"viewCamera",camera);Set(player,"weaponRoot",hands);Set(player,"pistol",pistol);Set(player,"knife",knife);Set(player,"flashlight",light);Set(player,"muzzleFlash",flash);
             RefineFirstPerson(player);
+            CombatContentUpgrade.UpgradePlayer(player);
             PrefabUtility.SaveAsPrefabAsset(go,Root+"/Prefabs/Player.prefab");go.transform.position=new Vector3(0,0,-6);return player;
         }
 
@@ -348,6 +353,8 @@ namespace TwoDoors.Editor
             Set(demo,"damageOverlay",overlay);
             var hp=Panel("HealthPanel",canvas.transform,new Vector2(0,0),new Vector2(220,95),new Vector2(240,48),new Color(0,0.03f,0.02f,0.65f));
             Set(demo,"health",Text("Health",hp.transform,"100",Vector2.zero,new Vector2(210,45),28));
+            demo.SetupHealthBar();
+            demo.SetupStaminaBar();
             var ammo=Panel("AmmoPanel",canvas.transform,new Vector2(1,0),new Vector2(-160,65),new Vector2(220,48),new Color(0,0,0,0.6f));
             Set(demo,"ammo",Text("Ammo",ammo.transform,"7 / 56",Vector2.zero,new Vector2(210,45),28));
             var slotImages=new List<UnityEngine.UI.Image>();

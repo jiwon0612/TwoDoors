@@ -16,6 +16,21 @@ namespace TwoDoors.Characters
         private PlayerCharacter target;
         private float nextPath, nextAttack, hitAt;
         private bool attacking;
+        private float recoverUntil, attackStarted;
+        private Transform visual;
+        private Quaternion visualRotation;
+        private Vector3 visualPosition;
+        float hitFlashUntil, staggerUntil, nextStagger;
+        Renderer[] hitRenderers;
+        MaterialPropertyBlock hitBlock;
+
+        public void ReactToHit()
+        {
+            hitFlashUntil = Time.time + 0.09f;
+            if (Time.time >= nextStagger) { staggerUntil = Time.time + 0.1f; nextStagger = Time.time + 0.4f; }
+        }
+        private bool Melee => this is ZombieEnemy || this is GolemEnemy;
+        public bool IsRecovering => Melee && Time.time < recoverUntil;
         public bool IsAttacking => attacking;
         public PlayerCharacter Target => target;
 
@@ -24,6 +39,11 @@ namespace TwoDoors.Characters
             base.Awake();
             agent = GetComponent<NavMeshAgent>();
             if (!animator) animator = GetComponentInChildren<Animator>();
+            visual = transform.Find("Visual");
+            if (visual) { visualRotation = visual.localRotation; visualPosition = visual.localPosition; }
+            hitRenderers = GetComponentsInChildren<Renderer>();
+            hitBlock = new MaterialPropertyBlock();
+            if (!GetComponent<EnemyHealthBar>()) gameObject.AddComponent<EnemyHealthBar>();
         }
 
         private void Start() => target = FindFirstObjectByType<PlayerCharacter>();
@@ -39,20 +59,37 @@ namespace TwoDoors.Characters
                 attacking = false;
                 return;
             }
-            if (target.IsPaused) return;
+            if (target.IsPaused) { agent.isStopped = true; return; }
+            if (!attacking && Time.time < staggerUntil) { agent.isStopped = true; SetMoving(false); return; }
+            if (IsRecovering) { agent.isStopped = true; SetMoving(false); return; }
             float distance = Vector3.Distance(transform.position, target.transform.position);
+            if (attacking && !CanAttackWhilePositioned(distance))
+            {
+                attacking = false;
+                nextPath = 0f;
+                if (animator) animator.ResetTrigger("Attack");
+            }
             if (attacking)
             {
                 if (Time.time >= hitAt)
                 {
                     attacking = false;
-                    if (distance <= attackRange + 0.3f && HasLineOfSight()) target.TakeDamage(attackDamage);
+                    var direction = target.transform.position - transform.position;
+                    direction.y = 0;
+                    // Keep the close-range attack trigger, but use a wider impact sweep.
+                    // During windup walking covers 2.28/3.15m, sprinting covers 6.37/8.82m.
+                    float impactRange = this is ZombieEnemy ? 4.6f : this is GolemEnemy ? 4.5f : attackRange + 0.3f;
+                    if (distance <= impactRange && (!Melee || Vector3.Dot(transform.forward, direction.normalized) > -0.5f) && HasLineOfSight()) PerformAttack(attackDamage);
+                    if (Melee)
+                    {
+                        recoverUntil = Time.time + 1f;
+                        nextAttack = Mathf.Max(nextAttack, recoverUntil);
+                        agent.isStopped = true;
+                    }
                 }
                 return;
             }
-            if (Time.time < nextAttack) { agent.isStopped = true; SetMoving(false); return; }
-            if (distance > detectionRadius) { agent.isStopped = true; SetMoving(false); return; }
-            if (distance <= attackRange && HasLineOfSight())
+            if (Time.time >= nextAttack && distance <= attackRange && CanAttackWhilePositioned(distance) && HasLineOfSight())
             {
                 agent.isStopped = true;
                 Vector3 facing = target.transform.position - transform.position;
@@ -60,6 +97,7 @@ namespace TwoDoors.Characters
                 if (facing.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(facing);
                 SetMoving(false);
                 attacking = true;
+                attackStarted = Time.time;
                 hitAt = Time.time + windup;
                 nextAttack = Time.time + attackCooldown;
                 if (animator) animator.SetTrigger("Attack");
@@ -69,14 +107,46 @@ namespace TwoDoors.Characters
                 agent.isStopped = false;
                 if (Time.time >= nextPath)
                 {
-                    agent.SetDestination(target.transform.position);
-                    nextPath = Time.time + 0.2f;
+                    agent.SetDestination(MovementDestination(distance));
+                    nextPath = Time.time + 0.1f;
                 }
                 SetMoving(agent.velocity.sqrMagnitude > 0.01f);
             }
         }
 
-        private bool HasLineOfSight()
+        protected virtual void PerformAttack(int damage) => target.TakeDamage(damage);
+
+        private void LateUpdate()
+        {
+            foreach (var renderer in hitRenderers)
+            {
+                if (!renderer || !renderer.sharedMaterial || !renderer.sharedMaterial.HasProperty("_BaseColor")) continue;
+                renderer.GetPropertyBlock(hitBlock);
+                hitBlock.SetColor("_BaseColor", Time.time < hitFlashUntil ? new Color(3, 1.4f, 0.6f) : renderer.sharedMaterial.GetColor("_BaseColor"));
+                renderer.SetPropertyBlock(hitBlock);
+            }
+            if (!Melee || !visual || IsDead) return;
+            float tilt = 0;
+            if (attacking)
+            {
+                float progress = Mathf.Clamp01((Time.time - attackStarted) / windup);
+                tilt = progress < 0.8f ? Mathf.Lerp(0, -22, progress / 0.8f) : Mathf.Lerp(-22, 28, (progress - 0.8f) / 0.2f);
+            }
+            else if (IsRecovering)
+            {
+                float elapsed = 1f - (recoverUntil - Time.time);
+                tilt = Mathf.Lerp(28, 0, elapsed);
+            }
+            // Tilt in the agent's forward direction, independent of imported model orientation.
+            visual.localRotation = Quaternion.Euler(tilt, 0, 0) * visualRotation;
+            visual.localPosition = Quaternion.Euler(tilt, 0, 0) * visualPosition;
+        }
+
+        protected virtual bool CanAttackWhilePositioned(float distance) => true;
+
+        protected virtual Vector3 MovementDestination(float distance) => target.transform.position;
+
+        protected bool HasLineOfSight()
         {
             Vector3 origin = transform.position + Vector3.up * 1.1f;
             Vector3 destination = target.transform.position + Vector3.up * 1.1f;

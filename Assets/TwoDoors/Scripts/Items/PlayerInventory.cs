@@ -12,7 +12,7 @@ namespace TwoDoors.Items
         [SerializeField] private bool startWithFlashlight = true;
         [SerializeField, Range(0, 210)] private int startingAmmo = 56;
         [SerializeField, Range(0, 9)] private int startingMedkits = 1;
-        private readonly int[] counts = new int[5];
+        private readonly int[] counts = new int[8];
         private bool initialized;
         private PlayerCharacter player;
         public bool IsOpen { get; private set; }
@@ -36,7 +36,8 @@ namespace TwoDoors.Items
         private void Awake() => Initialize();
         public int Count(ItemKind kind) { Initialize(); return counts[(int)kind]; }
         public static int Capacity(ItemKind kind) => kind == ItemKind.Ammo ? 210 : kind == ItemKind.Medkit ? 9 : 1;
-        public static string Label(ItemKind kind) => new[] { "KNIFE", "PISTOL", "AMMO", "MEDKIT", "FLASHLIGHT" }[(int)kind];
+        public static string Label(ItemKind kind) => new[] { "KNIFE", "PISTOL", "AMMO", "MEDKIT", "FLASHLIGHT", "MACHINE GUN", "SHOTGUN", "MACHETE" }[(int)kind];
+        public static bool IsWeapon(ItemKind kind) => kind is ItemKind.Knife or ItemKind.Pistol or ItemKind.MachineGun or ItemKind.Shotgun or ItemKind.Machete;
 
         public int Add(ItemKind kind, int amount)
         {
@@ -60,16 +61,12 @@ namespace TwoDoors.Items
         {
             if (!player || player.IsDead) { if (IsOpen) Close(); Nearby = null; return; }
             var keys = Keyboard.current;
-            if (keys != null && keys.tabKey.wasPressedThisFrame && (!player.IsPaused || IsOpen))
-            {
-                if (IsOpen) Close(); else { IsOpen = true; player.SetPaused(true); }
-            }
             Nearby = null;
             if (player.IsPaused || !player.ViewCamera) return;
             var camera = player.ViewCamera.transform;
             if (Physics.Raycast(camera.position, camera.forward, out var hit, 2.8f, ~0, QueryTriggerInteraction.Ignore))
                 Nearby = hit.collider.GetComponentInParent<ItemPickup>();
-            if (Nearby && keys != null && keys.eKey.wasPressedThisFrame) Nearby.TryCollect(player);
+            if (Nearby && keys != null && keys.gKey.wasPressedThisFrame) Nearby.TryCollect(player);
         }
 
         public void Close()
@@ -85,13 +82,22 @@ namespace TwoDoors.Items
             if (!player || player.IsDead || !IsOpen || Count(kind) == 0) return;
             switch (kind)
             {
+                case ItemKind.MachineGun:
+                case ItemKind.Shotgun:
+                case ItemKind.Machete: player.SelectSlot((int)kind); Notify(Label(kind) + " equipped"); break;
                 case ItemKind.Knife: player.SelectSlot(0); Notify("Knife equipped"); break;
                 case ItemKind.Pistol: player.SelectSlot(1); Notify("Pistol equipped"); break;
                 case ItemKind.Medkit: player.UseMedkit(); break;
                 case ItemKind.Flashlight: player.ToggleFlashlight(); break;
                 case ItemKind.Ammo:
-                    if (Count(ItemKind.Pistol) == 0) { Notify("Find a pistol first"); break; }
-                    player.SelectSlot(1); Close(); player.Reload(); break;
+                    if (!player.IsFirearm)
+                    {
+                        if (Count(ItemKind.MachineGun) > 0) player.SelectSlot((int)ItemKind.MachineGun);
+                        else if (Count(ItemKind.Shotgun) > 0) player.SelectSlot((int)ItemKind.Shotgun);
+                        else if (Count(ItemKind.Pistol) > 0) player.SelectSlot(1);
+                        else { Notify("Find a firearm first"); break; }
+                    }
+                    Close(); player.Reload(); break;
             }
         }
     }

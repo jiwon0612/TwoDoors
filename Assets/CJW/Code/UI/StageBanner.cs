@@ -54,7 +54,7 @@ namespace TwoDoors.UI
         void OnEventCompleted(RoomEvent finished)
         {
             // 즉시 통과하는 방은 입장 카드가 이미 떠 있으므로 생존 이벤트만 알린다
-            if (finished.Duration > 0f && !finished.EscapeOnClear) Show("생존", "다음 문이 열렸다", 1.8f);
+            if (finished.EnemyCount > 0 && !finished.EscapeOnClear) Show("섬멸 완료", "다음 문이 열렸다", 1.8f);
         }
 
         void OnEscaped() => Show("탈출", "살아서 마지막 문을 통과했다", 4f);
@@ -74,7 +74,7 @@ namespace TwoDoors.UI
             {
                 group.alpha = Mathf.Min(1f, t / fadeIn, (duration - t) / fadeOut);
                 // 살짝 위로 떠오르며 등장
-                group.transform.localPosition = new Vector3(0f, Mathf.Lerp(-12f, 0f, Mathf.Clamp01(t / fadeIn)), 0f);
+                ((RectTransform)group.transform).anchoredPosition = new Vector2(0f, Mathf.Lerp(-12f, 0f, Mathf.Clamp01(t / fadeIn)));
                 yield return null;
             }
             group.alpha = 0f;
@@ -102,9 +102,16 @@ namespace TwoDoors.UI
             group.alpha = 0f;
             group.blocksRaycasts = false;
 
-            heading = Label(root.transform, "Heading", 72, new Vector2(0, 70), FontStyles.Bold);
+            heading = Label(root.transform, "Heading", 64, new Vector2(0, 100), FontStyles.Bold);
+            heading.rectTransform.sizeDelta = new Vector2(1400, 90);
+            heading.alignment = TextAlignmentOptions.Bottom;
+            heading.enableAutoSizing = true;
+            heading.fontSizeMin = 40; heading.fontSizeMax = 64;
             heading.characterSpacing = 8;
-            detail = Label(root.transform, "Detail", 30, new Vector2(0, -60), FontStyles.Normal);
+            detail = Label(root.transform, "Detail", 30, new Vector2(0, 25), FontStyles.Normal);
+            detail.rectTransform.pivot = new Vector2(0.5f, 1);
+            detail.rectTransform.sizeDelta = new Vector2(1400, 360);
+            detail.alignment = TextAlignmentOptions.Top;
             detail.color = new Color(0.85f, 0.85f, 0.88f);
             detail.lineSpacing = 10;
         }

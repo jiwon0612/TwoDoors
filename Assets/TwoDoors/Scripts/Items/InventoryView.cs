@@ -17,29 +17,16 @@ namespace TwoDoors.Items
 
         private void Start()
         {
-            for (int i = 0; i < buttons.Length; i++)
-            {
-                var kind = (ItemKind)i;
-                buttons[i].onClick.AddListener(() => player.Inventory.Use(kind));
-            }
-            closeButton.onClick.AddListener(() => player.Inventory.Close());
+            if (panel) panel.SetActive(false);
         }
 
         private void Update()
         {
             if (!player || !player.Inventory) return;
             var bag = player.Inventory;
-            panel.SetActive(bag.IsOpen && !player.IsDead);
+            if (panel) panel.SetActive(false);
             prompt.text = !player.IsPaused && bag.Nearby ? bag.Nearby.Prompt : "";
-            message.text = Time.unscaledTime < bag.MessageUntil ? bag.Message : "";
-            for (int i = 0; i < labels.Length; i++)
-            {
-                var kind = (ItemKind)i;
-                int count = bag.Count(kind);
-                string action = kind == ItemKind.Ammo ? "RELOAD" : kind == ItemKind.Medkit ? "USE (+35 HP)" : kind == ItemKind.Flashlight ? "TOGGLE" : "EQUIP";
-                labels[i].text = $"{PlayerInventory.Label(kind)}\n<size=22>{count} / {PlayerInventory.Capacity(kind)}</size>\n<size=18>{(count > 0 ? action : "NOT OWNED")}</size>";
-                buttons[i].interactable = count > 0 && !(kind == ItemKind.Medkit && player.CurrentHealth == player.MaxHealth);
-            }
+            message.text = !bag.IsOpen && Time.unscaledTime < bag.MessageUntil ? bag.Message : "";
         }
     }
 }

@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1ea2cb12a8261f459e0f224bb9a50ba, type: 3}
   m_Name: 07_EmergencySwitch
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.StageChoice
-  title: "\uB2EC\uB9AC\uAC70\uB098 \uC9C0\uBD88\uD558\uAC70\uB098"
+  title: "\uC5B4\uB460 \uC18D \uC12C\uBA78"
   redDoor: {fileID: 11400000, guid: bfd77307d71054f459de368096d4f20e, type: 2}
   blueDoor: {fileID: 11400000, guid: 1aaa7352423e09344a9a29c2c8729f38, type: 2}

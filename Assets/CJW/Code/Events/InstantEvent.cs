@@ -7,11 +7,11 @@ namespace TwoDoors.Events
     [CreateAssetMenu(menuName = "TwoDoors/Events/Instant", fileName = "InstantEvent")]
     public class InstantEvent : RoomEvent
     {
-        public override bool IsCleared(IRoomContext ctx, float elapsed) => true;
+        public override bool IsCleared(IRoomContext ctx, float elapsed) => EnemyCount > 0 && ctx.AliveEnemyCount == 0;
 
         protected override void AppendConditionDescription(List<string> lines)
         {
-            if (EnemyCount == 0) lines.Add("전투 없이 바로 통과");
+            lines.Add("입장 비용 적용 후 적 전원 처치해야 통과");
         }
     }
 }

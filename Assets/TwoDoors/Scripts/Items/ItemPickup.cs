@@ -13,7 +13,7 @@ namespace TwoDoors.Items
         private Camera viewCamera;
         public ItemKind Kind => kind;
         public int Amount => amount;
-        public string Prompt => $"[E]  {PlayerInventory.Label(kind)}  x{amount}";
+        public string Prompt => $"[G]  {PlayerInventory.Label(kind)}  x{amount}";
 
         private void Awake()
         {
@@ -38,7 +38,7 @@ namespace TwoDoors.Items
             int added = player.Inventory.Add(kind, amount);
             if (added == 0) { player.Inventory.Notify("Inventory full / already owned"); return false; }
             amount -= added;
-            if (kind == ItemKind.Pistol) player.OnPistolCollected();
+            if (PlayerInventory.IsWeapon(kind)) player.OnWeaponCollected(kind);
             player.Inventory.Notify($"Picked up {PlayerInventory.Label(kind)} x{added}");
             if (amount == 0)
             {

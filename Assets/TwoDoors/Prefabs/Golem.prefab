@@ -440,11 +440,11 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.65
-  m_Speed: 0.65
-  m_Acceleration: 10
+  m_Speed: 3.2
+  m_Acceleration: 20
   avoidancePriority: 50
-  m_AngularSpeed: 240
-  m_StoppingDistance: 1.6
+  m_AngularSpeed: 360
+  m_StoppingDistance: 1.8
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
@@ -487,13 +487,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4826bd3008f8984c84427367571ffe7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Characters.GolemEnemy
-  maxHealth: 350
+  maxHealth: 500
   animator: {fileID: 4323152550099795551}
   detectionRadius: 14
-  attackRange: 2
-  attackDamage: 35
-  windup: 0.95
-  attackCooldown: 2.3
+  attackRange: 2.3
+  attackDamage: 50
+  windup: 0.9
+  attackCooldown: 1.9
 --- !u!1 &1744896938393179826
 GameObject:
   m_ObjectHideFlags: 0

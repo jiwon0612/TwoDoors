@@ -13,14 +13,13 @@ namespace TwoDoors.Events
         public override void Begin(IRoomContext ctx)
         {
             base.Begin(ctx);
-            ctx.ActivateButtons(buttonCount);
         }
 
-        public override bool IsCleared(IRoomContext ctx, float elapsed) => ctx.PressedButtonCount >= buttonCount || (EnemyCount > 0 && ctx.AliveEnemyCount == 0);
+        public override bool IsCleared(IRoomContext ctx, float elapsed) => EnemyCount > 0 && ctx.AliveEnemyCount == 0;
 
         protected override void AppendConditionDescription(List<string> lines)
         {
-            lines.Add($"버튼 {buttonCount}개 작동" + (EnemyCount > 0 ? " 또는 적 전원 처치로 통과" : "으로 통과"));
+            lines.Add("적 전원 처치해야 통과");
         }
     }
 }

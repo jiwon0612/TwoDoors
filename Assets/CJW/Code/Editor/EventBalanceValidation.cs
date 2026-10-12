@@ -27,6 +27,8 @@ namespace TwoDoors.EditorTools
                 {
                     Require(ev, id + " missing event");
                     var settings = new SerializedObject(ev);
+                    Require(settings.FindProperty("clearItems").arraySize == 0, ev.name + ": completion reward remains");
+                    Require(!ev.GetDescription().Contains("[섬멸]") && !ev.GetDescription().Contains("한도"), ev.name + ": unwanted door annotation");
                     bool suppliesWeapon = false;
                     foreach (var field in new[] { "entryItems", "clearItems" })
                     {
@@ -34,11 +36,15 @@ namespace TwoDoors.EditorTools
                         for (int i = 0; i < grants.arraySize; i++)
                         {
                             var kind = (ItemKind)grants.GetArrayElementAtIndex(i).FindPropertyRelative("kind").enumValueIndex;
-                            Require(!(ev is InstantEvent && ev.HealthChange < 0 && kind == ItemKind.Pistol), ev.name + ": health toll must not grant a pistol");
-                            suppliesWeapon |= kind == ItemKind.Pistol || kind == ItemKind.Ammo || kind == ItemKind.Medkit;
+                            Require(!(ev is InstantEvent && ev.HealthChange < 0 && (kind == ItemKind.Pistol || kind == ItemKind.MachineGun || kind == ItemKind.Shotgun)), ev.name + ": health toll must not grant a pistol");
+                            suppliesWeapon |= PlayerInventory.IsWeapon(kind) || kind == ItemKind.Ammo || kind == ItemKind.Medkit;
                         }
                     }
                     if (suppliesWeapon) supplyEvents++;
+                    Require(ev.EnemyCount > 0 && ev.Duration == 0 && !ev.SkipNextStage, ev.name + ": every room requires combat");
+                    var enemyGroups = settings.FindProperty("enemyGroups");
+                    for (int g = 0; g < enemyGroups.arraySize; g++)
+                        Require(enemyGroups.GetArrayElementAtIndex(g).FindPropertyRelative("prefab").objectReferenceValue is ZombieEnemy or GolemEnemy or MannequinEnemy, "Non-threatening enemy in catalog");
                     if (ev is SurvivalEvent combat)
                     {
                         var groups = settings.FindProperty("enemyGroups");
@@ -60,6 +66,22 @@ namespace TwoDoors.EditorTools
                         if (supplied) { ctx.Items[(int)ItemKind.Medkit] = 3; ctx.Items[(int)ItemKind.Ammo] = 56; }
                         float before = ctx.Health + ctx.Items[(int)ItemKind.Medkit] * 35;
                         ev.Begin(ctx);
+                        var entrySupplies = settings.FindProperty("entryItems");
+                        for (int itemIndex = 0; itemIndex < entrySupplies.arraySize; itemIndex++)
+                        {
+                            var grant = entrySupplies.GetArrayElementAtIndex(itemIndex);
+                            var kind = (ItemKind)grant.FindPropertyRelative("kind").enumValueIndex;
+                            Require(ctx.Items[(int)kind] > 0, ev.name + ": entry supply missing");
+                        }
+                        var beforeClear = (int[])ctx.Items.Clone();
+                        ev.OnCleared(ctx);
+                        for (int itemIndex = 0; itemIndex < beforeClear.Length; itemIndex++)
+                            Require(beforeClear[itemIndex] == ctx.Items[itemIndex], ev.name + ": completion awarded items twice");
+                        Require(!ev.IsCleared(ctx, 99999), ev.name + ": time bypassed combat");
+                        ctx.AliveEnemyCount = 1;
+                        Require(!ev.IsCleared(ctx, 99999), ev.name + ": last enemy not required");
+                        ctx.AliveEnemyCount = 0;
+                        Require(ev.IsCleared(ctx, 0), ev.name + ": wipe did not clear");
                         if (ev is InstantEvent)
                         {
                             ev.OnCleared(ctx);
@@ -68,6 +90,7 @@ namespace TwoDoors.EditorTools
                         }
                         else if (ev is SurvivalEvent survival)
                         {
+                            ctx.AliveEnemyCount = ev.EnemyCount;
                             Require(!ev.IsCleared(ctx, 0), ev.name + ": premature clear");
                             if (survival.RequireAllKills)
                             {
@@ -93,11 +116,11 @@ namespace TwoDoors.EditorTools
                 }
             }
             Require(supplyEvents == 10, "Health/weapon/ammo grants should occur in 10 of 18 choices (previously 6)");
-            Require(soloTypes.Contains(typeof(ZombieEnemy)) && soloTypes.Contains(typeof(GolemEnemy)) && soloTypes.Contains(typeof(MannequinEnemy)), "Each enemy needs a single-type event");
+            Require(soloTypes.Contains(typeof(ZombieEnemy)) && soloTypes.Contains(typeof(GolemEnemy)) && soloTypes.Contains(typeof(MannequinEnemy)), "Each remaining enemy needs a single-type event");
             Require(mixedEvents > 0, "Keep mixed combat events");
-            Require(killEvents > 0 && survivalEvents > 0, "Both combat objectives must exist");
+            Require(killEvents > 0 && survivalEvents == 0, "Only elimination objectives may remain");
             ValidateDifficulty();
-            return $"PASS {checkedEvents} events: {killEvents} kill-only, {survivalEvents} survival (max 40s), 3 solo types plus mixed waves, {supplyEvents} health/weapon/ammo grants; economy, timer/wipe, continuous healing";
+            return $"PASS {checkedEvents} elimination events, zombie/golem/ranged mannequin, {supplyEvents} item choices, 9 difficulty tiers and catalog immutability";
         }
 
         static void ValidateDifficulty()
@@ -150,7 +173,7 @@ namespace TwoDoors.EditorTools
 
         sealed class Context : IRoomContext
         {
-            public readonly int[] Items = new int[5];
+            public readonly int[] Items = new int[8];
             public float Health = 100;
             public int SpentAmmo;
             public int AliveEnemyCount { get; set; }

@@ -73,6 +73,7 @@ namespace TwoDoors.Editor
             so.ApplyModifiedPropertiesWithoutUndo();panel.gameObject.SetActive(false);
             var controls=hud.transform.Find("Controls").GetComponent<TMP_Text>();
             controls.text="WASD Move   SHIFT Sprint   E Pick up   TAB Inventory   LMB Attack   R Reload   1/2 Weapons   3 Heal   F Light   ESC Pause   F5 Restart";
+            CombatContentUpgrade.UpgradeInventory(view);
 
             var items = includeDemoPickups ? new GameObject("DemoPickups") : null;
             if (includeDemoPickups)

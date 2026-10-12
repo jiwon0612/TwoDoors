@@ -45,7 +45,7 @@ namespace TwoDoors.Events
         {
             if (!IsPlayerAlive || amount <= 0) return;
             int added = player.Inventory.Add(kind, amount);
-            if (kind == ItemKind.Pistol && added > 0) player.OnPistolCollected();
+            if (PlayerInventory.IsWeapon(kind) && added > 0) player.OnWeaponCollected(kind);
             player.Inventory.Notify(added > 0 ? $"{PlayerInventory.Label(kind)} +{added}" : "Inventory full / already owned");
         }
 
