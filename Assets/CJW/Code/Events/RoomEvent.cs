@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TwoDoors.Characters;
+using TwoDoors.Items;
 using UnityEngine;
 
 namespace TwoDoors.Events
@@ -13,6 +14,17 @@ namespace TwoDoors.Events
     /// </summary>
     public abstract class RoomEvent : ScriptableObject
     {
+        [System.Serializable]
+        public struct EnemyGroup { public EnemyCharacter prefab; [Min(1)] public int count; }
+        [System.Serializable]
+        public struct ItemGrant { public ItemKind kind; [Min(1)] public int amount; }
+        [SerializeField] EnemyGroup[] enemyGroups = new EnemyGroup[0];
+        [SerializeField] ItemGrant[] entryItems = new ItemGrant[0];
+        [SerializeField] ItemGrant[] clearItems = new ItemGrant[0];
+        public int EnemyCount
+        {
+            get { int count = zombieCount; foreach (var group in enemyGroups) count += group.count; return count; }
+        }
         [Header("입장 효과")]
         [Tooltip("양수 = 회복, 음수 = 감소. 방에 들어가는 즉시 적용되고 다음 단계에도 유지된다.")]
         [SerializeField] int healthChange;
@@ -43,8 +55,16 @@ namespace TwoDoors.Events
         public virtual void Begin(IRoomContext ctx)
         {
             if (healthChange != 0) ctx.ChangeHealth(healthChange);
+            if (!ctx.IsPlayerAlive) return;
             ctx.SetLights(!lightsOff);
             if (zombieCount > 0) ctx.SpawnZombies(zombiePrefab, zombieCount);
+            foreach (var group in enemyGroups) if (group.count > 0) ctx.SpawnZombies(group.prefab, group.count);
+            foreach (var item in entryItems) ctx.GiveItem(item.kind, item.amount);
+        }
+
+        public virtual void OnCleared(IRoomContext ctx)
+        {
+            foreach (var item in clearItems) ctx.GiveItem(item.kind, item.amount);
         }
 
         public virtual void Tick(IRoomContext ctx, float elapsed, float deltaTime) { }
@@ -66,12 +86,21 @@ namespace TwoDoors.Events
             else if (healthChange < 0) lines.Add($"체력 {-healthChange} 감소");
             if (lightsOff) lines.Add("방의 조명이 꺼짐");
             if (zombieCount > 0) lines.Add($"좀비 {zombieCount}마리 등장");
+            foreach (var group in enemyGroups)
+                lines.Add($"{(group.prefab is GolemEnemy ? "골렘" : group.prefab is MannequinEnemy ? "목각인형" : "좀비")} {group.count}마리 등장");
+            foreach (var item in entryItems) lines.Add($"입장 보급: {ItemName(item.kind)} {item.amount}개");
             AppendConditionDescription(lines);
+            foreach (var item in clearItems) lines.Add($"통과 보상: {ItemName(item.kind)} {item.amount}개 (보유 한도까지)");
             if (skipNextStage) lines.Add("다음 선택 단계 하나 건너뛰기");
             if (escapeOnClear) lines.Add("탈출 성공");
             return string.Join("\n", lines);
         }
 
         protected abstract void AppendConditionDescription(List<string> lines);
+        public static string ItemName(ItemKind kind) => kind switch
+        {
+            ItemKind.Ammo => "예비 탄약", ItemKind.Medkit => "회복약", ItemKind.Pistol => "권총",
+            ItemKind.Flashlight => "손전등", _ => "칼"
+        };
     }
 }

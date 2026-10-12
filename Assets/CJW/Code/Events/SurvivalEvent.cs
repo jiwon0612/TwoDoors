@@ -15,11 +15,12 @@ namespace TwoDoors.Events
 
         public override float Duration => surviveTime;
 
-        public override bool IsCleared(IRoomContext ctx, float elapsed) => elapsed >= surviveTime;
+        public override bool IsCleared(IRoomContext ctx, float elapsed) =>
+            elapsed >= surviveTime || (EnemyCount > 0 && ctx.AliveEnemyCount == 0);
 
         protected override void AppendConditionDescription(List<string> lines)
         {
-            lines.Add($"{surviveTime:0.#}초 동안 생존");
+            lines.Add(EnemyCount > 0 ? $"전원 처치 또는 {surviveTime:0.#}초 생존 시 통과" : $"{surviveTime:0.#}초 동안 생존");
         }
     }
 }

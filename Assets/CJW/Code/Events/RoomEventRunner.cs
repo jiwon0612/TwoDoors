@@ -17,6 +17,7 @@ namespace TwoDoors.Events
         public bool IsRunning => Current != null;
         public bool HasTimer => IsRunning && Current.Duration > 0f;
         public float RemainingTime => HasTimer ? Mathf.Max(0f, Current.Duration - Elapsed) : 0f;
+        public int AliveEnemyCount => room.AliveEnemyCount;
 
         public event Action<RoomEvent> Started;
         public event Action<RoomEvent> Completed;
@@ -77,6 +78,7 @@ namespace TwoDoors.Events
         void Complete()
         {
             var finished = Current;
+            finished.OnCleared(room);
             finished.End(room);
             Current = null;
             Completed?.Invoke(finished);

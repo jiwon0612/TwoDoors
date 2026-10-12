@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1ea2cb12a8261f459e0f224bb9a50ba, type: 3}
+  m_Name: 06_AmmoExchange
+  m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.StageChoice
+  title: "\uD0C4\uC57D \uD658\uC804\uC18C"
+  redDoor: {fileID: 11400000, guid: f745dfa06b4fde744ad36898477c0602, type: 2}
+  blueDoor: {fileID: 11400000, guid: 702a7dd3172b4584f94743366219b1c5, type: 2}
