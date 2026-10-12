@@ -13,13 +13,9 @@ MonoBehaviour:
   m_Name: 07_EmergencySwitch_Blue
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.InstantEvent
   enemyGroups: []
-  entryItems:
-  - kind: 2
-    amount: 42
-  - kind: 3
-    amount: 1
+  entryItems: []
   clearItems: []
-  healthChange: -35
+  healthChange: -40
   lightsOff: 0
   zombieCount: 0
   zombiePrefab: {fileID: 0}

@@ -24,4 +24,4 @@ MonoBehaviour:
   customDescription: 
   payment: 3
   price: 2
-  missingItemDamage: 50
+  missingItemDamage: 75

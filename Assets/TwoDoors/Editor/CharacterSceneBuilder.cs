@@ -67,9 +67,9 @@ namespace TwoDoors.Editor
                 lamp.type = LightType.Point; lamp.range = 12; lamp.intensity = 3;
                 lamp.color = new Color(0.8f,0.88f,1); lamp.transform.position = new Vector3((i-1)*7,4,5);
             }
-            var mannequin = CreateEnemy<MannequinEnemy>("Mannequin", MakeMannequin(), new Vector3(-5,0,8),100,2.3f,12,0.45f,1.3f,1.6f);
-            var golem = CreateEnemy<GolemEnemy>("Golem", MakeGolem(), new Vector3(0,0,10),350,0.65f,30,0.95f,2.3f,2.0f);
-            var zombie = CreateEnemy<ZombieEnemy>("Zombie", MakeZombie(), new Vector3(5,0,8),120,1.35f,15,0.65f,1.7f,1.6f);
+            var mannequin = CreateEnemy<MannequinEnemy>("Mannequin", MakeMannequin(), new Vector3(-5,0,8),100,2.8f,12,0.45f,1.3f,1.6f);
+            var golem = CreateEnemy<GolemEnemy>("Golem", MakeGolem(), new Vector3(0,0,10),350,0.65f,35,0.95f,2.3f,2.0f);
+            var zombie = CreateEnemy<ZombieEnemy>("Zombie", MakeZombie(), new Vector3(5,0,8),120,4.5f,15,0.65f,1.7f,1.6f);
             var player = MakePlayer();
             MakeHud(player);
             foreach (var enemy in new EnemyCharacter[]{mannequin,golem,zombie}) enemy.transform.rotation = Quaternion.Euler(0,180,0);

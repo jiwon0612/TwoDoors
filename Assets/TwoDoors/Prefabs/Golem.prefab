@@ -491,7 +491,7 @@ MonoBehaviour:
   animator: {fileID: 4323152550099795551}
   detectionRadius: 14
   attackRange: 2
-  attackDamage: 30
+  attackDamage: 35
   windup: 0.95
   attackCooldown: 2.3
 --- !u!1 &1744896938393179826

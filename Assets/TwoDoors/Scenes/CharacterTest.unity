@@ -3938,7 +3938,7 @@ MonoBehaviour:
   animator: {fileID: 1924102778}
   detectionRadius: 14
   attackRange: 2
-  attackDamage: 30
+  attackDamage: 35
   windup: 0.95
   attackCooldown: 2.3
 --- !u!136 &447304644
@@ -6637,7 +6637,7 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: 36eac1f78a0e9584b832120377bb9168, type: 2}
+  m_NavMeshData: {fileID: 0}
   m_BuildHeightMesh: 0
 --- !u!4 &775323700
 Transform:
@@ -8543,7 +8543,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.32
-  m_Speed: 2.3
+  m_Speed: 2.8
   m_Acceleration: 10
   avoidancePriority: 50
   m_AngularSpeed: 240
@@ -10875,7 +10875,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Items.ItemPickup
   kind: 3
-  amount: 3
+  amount: 1
 --- !u!65 &1259037416
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -14847,7 +14847,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MEDKIT x3
+  m_text: MEDKIT x1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -15989,7 +15989,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.32
-  m_Speed: 1.35
+  m_Speed: 4.5
   m_Acceleration: 10
   avoidancePriority: 50
   m_AngularSpeed: 240

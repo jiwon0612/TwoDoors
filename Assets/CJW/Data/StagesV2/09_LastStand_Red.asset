@@ -23,5 +23,5 @@ MonoBehaviour:
   escapeOnClear: 1
   customDescription: 
   payment: 3
-  price: 3
-  missingItemDamage: 65
+  price: 2
+  missingItemDamage: 80

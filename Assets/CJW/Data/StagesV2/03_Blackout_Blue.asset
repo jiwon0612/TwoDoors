@@ -15,7 +15,7 @@ MonoBehaviour:
   enemyGroups: []
   entryItems: []
   clearItems: []
-  healthChange: -30
+  healthChange: -35
   lightsOff: 0
   zombieCount: 0
   zombiePrefab: {fileID: 0}

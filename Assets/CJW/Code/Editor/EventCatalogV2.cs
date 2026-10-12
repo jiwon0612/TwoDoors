@@ -20,32 +20,32 @@ namespace TwoDoors.EditorTools
         {
             System.IO.Directory.CreateDirectory(Root);AssetDatabase.Refresh();
             Stage(0,"무장할 대가",
-                Event<InstantEvent>(0,"Red",hp:-25,entry:new[]{Grant(ItemKind.Pistol,1),Grant(ItemKind.Ammo,70)}),
-                Event<SurvivalEvent>(0,"Blue",time:18,mannequins:4,entry:new[]{Grant(ItemKind.Pistol,1),Grant(ItemKind.Ammo,14)},reward:new[]{Grant(ItemKind.Medkit,2)}));
+                Event<InstantEvent>(0,"Red",hp:-30,entry:new[]{Grant(ItemKind.Pistol,1),Grant(ItemKind.Ammo,28)}),
+                Event<SurvivalEvent>(0,"Blue",time:25,mannequins:5,entry:new[]{Grant(ItemKind.Pistol,1),Grant(ItemKind.Ammo,7)},reward:new[]{Grant(ItemKind.Ammo,14)}));
             Stage(1,"떼거리 vs 공성전",
-                Event<SurvivalEvent>(1,"Red",time:12,mannequins:8,entry:new[]{Grant(ItemKind.Ammo,35)}),
-                Event<SurvivalEvent>(1,"Blue",time:50,golems:3,reward:new[]{Grant(ItemKind.Medkit,2)}));
+                Event<SurvivalEvent>(1,"Red",time:18,mannequins:9),
+                Event<SurvivalEvent>(1,"Blue",time:55,golems:4));
             Stage(2,"빛을 살 것인가",
-                Event<SurvivalEvent>(2,"Red",time:22,mannequins:6,dark:true,entry:new[]{Grant(ItemKind.Flashlight,1)},reward:new[]{Grant(ItemKind.Ammo,70)}),
-                Event<InstantEvent>(2,"Blue",hp:-30));
+                Event<SurvivalEvent>(2,"Red",time:30,mannequins:7,dark:true,entry:new[]{Grant(ItemKind.Flashlight,1)},reward:new[]{Grant(ItemKind.Ammo,14)}),
+                Event<InstantEvent>(2,"Blue",hp:-35));
             Stage(3,"야전 병원",
-                Event<HealZoneEvent>(3,"Red",time:35,golems:2,healRate:8),
-                Event<InstantEvent>(3,"Blue",hp:-20,entry:new[]{Grant(ItemKind.Medkit,4)}));
+                Event<HealZoneEvent>(3,"Red",time:40,golems:3,mannequins:2,healRate:8f),
+                Event<InstantEvent>(3,"Blue",hp:-20,entry:new[]{Grant(ItemKind.Ammo,21)}));
             Stage(4,"보급품 통행료",
-                Event<ItemTradeEvent>(4,"Red",skip:true,payment:ItemKind.Medkit,price:2,penalty:50),
-                Event<SurvivalEvent>(4,"Blue",time:45,golems:2,mannequins:4,reward:new[]{Grant(ItemKind.Medkit,3)}));
+                Event<ItemTradeEvent>(4,"Red",skip:true,payment:ItemKind.Medkit,price:2,penalty:75),
+                Event<SurvivalEvent>(4,"Blue",time:50,golems:3,mannequins:5,reward:new[]{Grant(ItemKind.Medkit,1)}));
             Stage(5,"탄약 환전소",
-                Event<ItemTradeEvent>(5,"Red",payment:ItemKind.Ammo,price:28,penalty:40,reward:new[]{Grant(ItemKind.Medkit,3)}),
-                Event<SurvivalEvent>(5,"Blue",time:30,mannequins:6,zombies:2,entry:new[]{Grant(ItemKind.Ammo,14)},reward:new[]{Grant(ItemKind.Ammo,84)}));
+                Event<ItemTradeEvent>(5,"Red",payment:ItemKind.Ammo,price:28,penalty:50,reward:new[]{Grant(ItemKind.Medkit,1)}),
+                Event<SurvivalEvent>(5,"Blue",time:40,mannequins:7,zombies:2,reward:new[]{Grant(ItemKind.Ammo,35)}));
             Stage(6,"달리거나 지불하거나",
-                Event<ButtonEvent>(6,"Red",mannequins:5,dark:true,entry:new[]{Grant(ItemKind.Flashlight,1)}),
-                Event<InstantEvent>(6,"Blue",hp:-35,entry:new[]{Grant(ItemKind.Ammo,42),Grant(ItemKind.Medkit,1)}));
+                Event<ButtonEvent>(6,"Red",mannequins:7,golems:1,dark:true,entry:new[]{Grant(ItemKind.Flashlight,1)}),
+                Event<InstantEvent>(6,"Blue",hp:-40));
             Stage(7,"피의 보급 상자",
-                Event<InstantEvent>(7,"Red",hp:-55,entry:new[]{Grant(ItemKind.Ammo,105),Grant(ItemKind.Medkit,4)}),
-                Event<SurvivalEvent>(7,"Blue",time:55,zombies:3,golems:2,mannequins:4,reward:new[]{Grant(ItemKind.Ammo,35),Grant(ItemKind.Medkit,1)}));
+                Event<InstantEvent>(7,"Red",hp:-45,entry:new[]{Grant(ItemKind.Ammo,42)}),
+                Event<SurvivalEvent>(7,"Blue",time:60,zombies:2,golems:3,mannequins:5,reward:new[]{Grant(ItemKind.Ammo,28)}));
             Stage(8,"최후의 탈출",
-                Event<ItemTradeEvent>(8,"Red",payment:ItemKind.Medkit,price:3,penalty:65,escape:true),
-                Event<SurvivalEvent>(8,"Blue",time:60,golems:3,mannequins:6,entry:new[]{Grant(ItemKind.Ammo,56)},escape:true));
+                Event<ItemTradeEvent>(8,"Red",payment:ItemKind.Medkit,price:2,penalty:80,escape:true),
+                Event<SurvivalEvent>(8,"Blue",time:70,golems:4,mannequins:6,entry:new[]{Grant(ItemKind.Ammo,14)},escape:true));
             AssetDatabase.SaveAssets();
         }
 

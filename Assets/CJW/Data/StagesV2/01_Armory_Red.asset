@@ -17,9 +17,9 @@ MonoBehaviour:
   - kind: 1
     amount: 1
   - kind: 2
-    amount: 70
+    amount: 28
   clearItems: []
-  healthChange: -25
+  healthChange: -30
   lightsOff: 0
   zombieCount: 0
   zombiePrefab: {fileID: 0}

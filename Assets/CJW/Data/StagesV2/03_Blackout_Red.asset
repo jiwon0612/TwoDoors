@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.SurvivalEvent
   enemyGroups:
   - prefab: {fileID: 1427129230471473143, guid: 62262f0f75bb7e04fb4cd8bdef09e875, type: 3}
-    count: 6
+    count: 7
   entryItems:
   - kind: 4
     amount: 1
   clearItems:
   - kind: 2
-    amount: 70
+    amount: 14
   healthChange: 0
   lightsOff: 1
   zombieCount: 0
@@ -28,4 +28,4 @@ MonoBehaviour:
   skipNextStage: 0
   escapeOnClear: 0
   customDescription: 
-  surviveTime: 22
+  surviveTime: 30

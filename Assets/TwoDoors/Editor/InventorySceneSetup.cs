@@ -79,7 +79,7 @@ namespace TwoDoors.Editor
             for(int i=0;i<4;i++)
             {
                 var kind=new[]{ItemKind.Pistol,ItemKind.Ammo,ItemKind.Medkit,ItemKind.Flashlight}[i];
-                var pickup=CreatePickup(kind,kind==ItemKind.Ammo?21:kind==ItemKind.Medkit?3:1,player);
+                var pickup=CreatePickup(kind,kind==ItemKind.Ammo?21:1,player);
                 PrefabUtility.SaveAsPrefabAsset(pickup,"Assets/TwoDoors/Prefabs/Pickup"+kind+".prefab");
                 pickup.transform.SetParent(items.transform,false);
                 pickup.transform.position=new Vector3((i-1.5f)*0.8f,1.1f,-4.25f);

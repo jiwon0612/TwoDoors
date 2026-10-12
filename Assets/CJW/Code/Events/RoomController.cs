@@ -91,7 +91,9 @@ namespace TwoDoors.Events
                 int index = spawnedZombies.Count;
                 var point = zombieSpawnPoints[index % zombieSpawnPoints.Length];
                 int ring = index / zombieSpawnPoints.Length;
-                Vector3 position = point.position + new Vector3((ring % 2 == 0 ? 1 : -1) * ring * 1.6f, 0, -ring * 1.8f);
+                // Keep larger waves inside the side walls instead of widening every row.
+                float lateralOffset = ring == 0 ? 0 : (ring % 2 == 0 ? 1.6f : -1.6f);
+                Vector3 position = point.position + new Vector3(lateralOffset, 0, -ring * 1.8f);
                 if (NavMesh.SamplePosition(position, out var hit, 3f, NavMesh.AllAreas)) position = hit.position;
                 var zombie = Instantiate(prefab, position, point.rotation, transform);
                 zombie.SetTarget(player);

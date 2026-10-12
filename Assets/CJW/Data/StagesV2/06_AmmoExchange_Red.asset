@@ -16,7 +16,7 @@ MonoBehaviour:
   entryItems: []
   clearItems:
   - kind: 3
-    amount: 3
+    amount: 1
   healthChange: 0
   lightsOff: 0
   zombieCount: 0
@@ -26,4 +26,4 @@ MonoBehaviour:
   customDescription: 
   payment: 2
   price: 28
-  missingItemDamage: 40
+  missingItemDamage: 50
