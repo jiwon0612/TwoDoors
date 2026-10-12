@@ -68,11 +68,13 @@ namespace TwoDoors.EditorTools
             // 테스트 씬의 데모 줍기 아이템도 제거 (아이템은 이벤트 보급/보상으로만 얻는다)
             var demoPickups = GameObject.Find("DemoPickups");
             if (demoPickups) Object.DestroyImmediate(demoPickups);
+            foreach (var pickup in Object.FindObjectsByType<TwoDoors.Items.ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (pickup) Object.DestroyImmediate(pickup.gameObject);
 
             // 손전등·총구 화염 등 플레이어에 붙은 조명은 제외
             var roomLights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None)
                 .Where(l => !l.transform.IsChildOf(player.transform)).ToArray();
-            SetupAtmosphere(roomLights);
+            roomLights = roomLights.Concat(DressRoom(roomLights)).ToArray();
             HideTestHeader();
 
             var root = new GameObject("StageSetup").transform;
@@ -143,42 +145,134 @@ namespace TwoDoors.EditorTools
             Debug.Log($"게임 씬 생성 완료: {ScenePath} (빌드 씬 목록에 등록)");
         }
 
-        // 시작 화면과 이어지도록 방을 어둡고 탁하게. 복사본 씬의 조명 값만 바꾸고 원본 씬은 그대로 둔다.
-        static void SetupAtmosphere(Light[] roomLights)
+        // 시작 화면과 같은 재료·조명으로 방을 꾸민다.
+        // 복사본 씬의 렌더러 머티리얼 연결과 조명 값만 바꾸고, 김우진의 머티리얼/프리팹 에셋은 그대로 둔다.
+        // 반환값은 새로 추가한 천장 등(정전 이벤트가 같이 꺼야 하는 조명).
+        static Light[] DressRoom(Light[] roomLights)
         {
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.13f, 0.14f, 0.17f);
+            RenderSettings.ambientLight = new Color(0.085f, 0.09f, 0.11f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogColor = new Color(0.02f, 0.022f, 0.028f);
-            RenderSettings.fogDensity = 0.04f;
-            foreach (var light in roomLights)
+            RenderSettings.fogColor = new Color(0.015f, 0.016f, 0.022f);
+            RenderSettings.fogDensity = 0.05f;
+            RenderSettings.defaultReflectionMode = DefaultReflectionMode.Skybox;
+            RenderSettings.reflectionIntensity = 0.4f;
+
+            var wall = Mat("TitleWall", new Color(0.09f, 0.09f, 0.1f), smoothness: 0.15f);
+            var floor = Mat("TitleFloor", new Color(0.015f, 0.015f, 0.018f), smoothness: 0.6f);
+            var trim = Mat("TitleTrim", new Color(0.03f, 0.03f, 0.035f), smoothness: 0.4f);
+            var bulb = Mat("TitleBulb", new Color(0.9f, 0.9f, 0.8f), new Color(1.6f, 1.55f, 1.3f));
+
+            var room = GameObject.Find("TestRoom");
+            if (room)
+                foreach (var r in room.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (r.name == "Floor") r.sharedMaterial = floor;
+                    else if (r.name.EndsWith("Wall")) r.sharedMaterial = wall; // CutBackWall이 이 재질을 이어받는다
+                    else if (r.name == "Obstacle") r.sharedMaterial = trim;
+                }
+
+            // 천장과 벽 기둥·보로 시작 화면 복도 같은 깊이감
+            var dressing = new GameObject("Dressing").transform;
+            Box("Ceiling", dressing, new Vector3(0, 5.1f, 2), new Vector3(24, 0.2f, 26), wall, collider: true);
+            for (float z = -8.5f; z <= 13f; z += 4.3f)
             {
-                if (light.type == LightType.Directional) light.intensity *= 0.35f;
-                else light.color = new Color(0.85f, 0.88f, 1f);
+                Box("PillarL", dressing, new Vector3(-11.7f, 2.5f, z), new Vector3(0.3f, 5f, 0.5f), trim, collider: true);
+                Box("PillarR", dressing, new Vector3(11.7f, 2.5f, z), new Vector3(0.3f, 5f, 0.5f), trim, collider: true);
+                Box("Beam", dressing, new Vector3(0, 4.85f, z), new Vector3(24, 0.3f, 0.4f), trim);
             }
+
+            // 해 조명은 약한 보조광으로만 남긴다 (천장이 생겨 그림자는 끈다)
+            foreach (var light in roomLights.Where(l => l.type == LightType.Directional))
+            {
+                light.intensity = 0.15f;
+                light.shadows = LightShadows.None;
+            }
+
+            // 기존 천장 등은 형광등으로, 시작 지점 쪽에 두 개 추가. 가운데 하나는 고장나서 깜빡인다.
+            var lamps = roomLights.Where(l => l.type == LightType.Point).ToList();
+            var added = new System.Collections.Generic.List<Light>();
+            foreach (var spot in new[] { new Vector3(-6f, 0, -5f), new Vector3(6f, 0, -5f) })
+            {
+                var light = new GameObject("CeilingLight", typeof(Light)).GetComponent<Light>();
+                light.transform.SetParent(dressing);
+                light.transform.position = spot;
+                light.type = LightType.Point;
+                lamps.Add(light);
+                added.Add(light);
+            }
+            for (int i = 0; i < lamps.Count; i++)
+            {
+                var light = lamps[i];
+                bool broken = i == 1;
+                var p = light.transform.position;
+                light.transform.position = new Vector3(p.x, 4.6f, p.z);
+                light.color = new Color(0.85f, 0.88f, 1f);
+                light.intensity = broken ? 3f : 2.2f;
+                light.range = 10f;
+                light.shadows = broken ? LightShadows.Soft : LightShadows.None;
+                var tube = Box("Tube", light.transform, new Vector3(0, 0.32f, 0), new Vector3(0.14f, 0.06f, 1.6f), bulb);
+                var lamp = light.gameObject.AddComponent<LightFlicker>();
+                Set(lamp, so =>
+                {
+                    so.FindProperty("bulb").objectReferenceValue = tube.GetComponent<Renderer>();
+                    so.FindProperty("flicker").boolValue = broken;
+                });
+            }
+
+            // 문 앞 색 조명: 젖은 바닥에 빨강·파랑이 번진다. 정전에도 꺼지지 않도록 roomLights에는 넣지 않는다.
+            DoorSpill(dressing, DoorXs[0], new Color(0.85f, 0.1f, 0.12f));
+            DoorSpill(dressing, DoorXs[1], new Color(0.12f, 0.3f, 0.95f));
+
+            TitleSceneBuilder.MakeDust(new Vector3(0, 2.5f, 2f), new Vector3(24, 5, 26), 60f);
 
             var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(GameVolumePath);
             if (!profile)
             {
                 profile = ScriptableObject.CreateInstance<VolumeProfile>();
                 AssetDatabase.CreateAsset(profile, GameVolumePath);
-                var bloom = AddOverride<Bloom>(profile);
-                bloom.intensity.Override(0.9f);
-                bloom.threshold.Override(0.6f); // 어두운 방에서도 문이 번져 보이도록
-                var vignette = AddOverride<Vignette>(profile);
-                vignette.intensity.Override(0.38f);
-                vignette.smoothness.Override(0.4f);
-                var grain = AddOverride<FilmGrain>(profile);
-                grain.type.Override(FilmGrainLookup.Medium3);
-                grain.intensity.Override(0.25f);
-                var color = AddOverride<ColorAdjustments>(profile);
-                color.contrast.Override(12f);
-                color.saturation.Override(-10f);
             }
+            // 시작 화면 값에 맞춘다. 이미 있는 프로필도 매번 같은 값으로 덮어쓴다.
+            var bloom = Override<Bloom>(profile);
+            bloom.intensity.Override(1.2f);
+            bloom.threshold.Override(0.6f);
+            bloom.scatter.Override(0.75f);
+            var vignette = Override<Vignette>(profile);
+            vignette.intensity.Override(0.45f);
+            vignette.smoothness.Override(0.45f);
+            var grain = Override<FilmGrain>(profile);
+            grain.type.Override(FilmGrainLookup.Medium3);
+            grain.intensity.Override(0.3f);
+            var aberration = Override<ChromaticAberration>(profile);
+            aberration.intensity.Override(0.12f);
+            var color = Override<ColorAdjustments>(profile);
+            color.postExposure.Override(0.2f);
+            color.contrast.Override(16f);
+            color.saturation.Override(-12f);
+            EditorUtility.SetDirty(profile);
+
             var volume = new GameObject("PostProcess", typeof(Volume)).GetComponent<Volume>();
             volume.isGlobal = true;
             volume.sharedProfile = profile;
+            return added.ToArray();
+        }
+
+        static void DoorSpill(Transform parent, float x, Color color)
+        {
+            var light = new GameObject("DoorSpill", typeof(Light)).GetComponent<Light>();
+            light.transform.SetParent(parent);
+            light.transform.position = new Vector3(x, 1.6f, DoorZ - 1.2f);
+            light.type = LightType.Point;
+            light.color = color;
+            light.range = 6.5f;
+            light.intensity = 2.5f;
+        }
+
+        static T Override<T>(VolumeProfile profile) where T : VolumeComponent
+        {
+            if (profile.TryGet<T>(out var existing)) return existing;
+            return AddOverride<T>(profile);
         }
 
         internal static T AddOverride<T>(VolumeProfile profile) where T : VolumeComponent
@@ -248,7 +342,11 @@ namespace TwoDoors.EditorTools
         static void WallPiece(Transform parent, float x0, float x1, float y0, float y1, Material material)
         {
             if (x1 - x0 < 0.01f) return;
-            Box("Wall", parent, new Vector3((x0 + x1) / 2f, (y0 + y1) / 2f, 15f), new Vector3(x1 - x0, y1 - y0, 0.3f), material, collider: true);
+            var wall = Box("Wall", parent, new Vector3((x0 + x1) / 2f, (y0 + y1) / 2f, 15f), new Vector3(x1 - x0, y1 - y0, 0.3f), material, collider: true);
+            // 김우진의 벽 충돌체처럼 두께 1.2로 늘려 밀림으로 벽을 뚫지 않게 한다. 방 쪽 면은 그대로 두고 바깥으로만 늘린다.
+            var box = wall.GetComponent<BoxCollider>();
+            box.size = new Vector3(1f, 1f, 4f);
+            box.center = new Vector3(0f, 0f, 1.5f);
         }
 
         static StageDoor MakeDoor(Transform parent, DoorColor color, float x, Color tint, StageManager manager)

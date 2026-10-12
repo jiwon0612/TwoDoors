@@ -47,7 +47,7 @@ namespace TwoDoors.EditorTools
             SetupAtmosphere();
             var camera = MakeCamera();
             MakeCorridor(out var panels, out var doorLights);
-            MakeDust();
+            MakeDust(new Vector3(0, Height / 2, CorridorLength / 2), new Vector3(HalfWidth * 2, Height, CorridorLength), 35f);
             MakeVolume();
             var screen = MakeUi(out var options, out var content, out var fade, out var title);
 
@@ -174,24 +174,24 @@ namespace TwoDoors.EditorTools
             }
         }
 
-        static void MakeDust()
+        internal static void MakeDust(Vector3 center, Vector3 size, float rate)
         {
             var go = new GameObject("Dust", typeof(ParticleSystem));
-            go.transform.position = new Vector3(0, Height / 2, CorridorLength / 2);
+            go.transform.position = center;
             var ps = go.GetComponent<ParticleSystem>();
             var main = ps.main;
             main.startLifetime = 10f;
             main.startSpeed = 0.03f;
             main.startSize = new ParticleSystem.MinMaxCurve(0.008f, 0.025f);
             main.startColor = new Color(1f, 1f, 1f, 0.35f);
-            main.maxParticles = 400;
+            main.maxParticles = Mathf.CeilToInt(rate * 12f);
             main.prewarm = true;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             var emission = ps.emission;
-            emission.rateOverTime = 35f;
+            emission.rateOverTime = rate;
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = new Vector3(HalfWidth * 2, Height, CorridorLength);
+            shape.scale = size;
             var noise = ps.noise;
             noise.enabled = true;
             noise.strength = 0.05f;

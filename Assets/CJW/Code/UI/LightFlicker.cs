@@ -2,11 +2,15 @@ using UnityEngine;
 
 namespace TwoDoors.UI
 {
-    /// <summary>고장난 형광등처럼 불규칙하게 깜빡이는 조명. 같은 오브젝트의 발광 렌더러도 함께 끈다.</summary>
+    /// <summary>
+    /// 형광등. 발광 막대(bulb)를 조명 켜짐 상태와 맞추고, flicker가 켜져 있으면 고장난 듯 불규칙하게 깜빡인다.
+    /// 정전 이벤트가 Light를 끄면 막대도 함께 꺼진다.
+    /// </summary>
     [RequireComponent(typeof(Light))]
     public class LightFlicker : MonoBehaviour
     {
         [SerializeField] Renderer bulb;
+        [SerializeField] bool flicker = true;
         [SerializeField, Range(0f, 1f)] float flickerChance = 0.08f;
 
         Light target;
@@ -22,6 +26,11 @@ namespace TwoDoors.UI
 
         void Update()
         {
+            if (!target.enabled || !flicker)
+            {
+                if (bulb) bulb.enabled = target.enabled;
+                return;
+            }
             if (Time.time < nextChange) return;
 
             // 대부분은 켜져 있다가, 가끔 짧게 여러 번 끊긴다

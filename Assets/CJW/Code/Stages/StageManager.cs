@@ -67,6 +67,7 @@ namespace TwoDoors.Stages
 
             runner.Completed += OnEventCompleted;
             room.Player.Died += OnPlayerDied;
+            AllowDoorPassages();
             runOrder = (StageChoice[])stages.Clone();
             // Shuffle balanced pairs without replacement; keep the escape pair last.
             for (int i = runOrder.Length - 2; i > 0; i--)
@@ -147,6 +148,15 @@ namespace TwoDoors.Stages
             redDoor.Open(CurrentStage.RedDoor.GetDescription());
             blueDoor.Open(CurrentStage.BlueDoor.GetDescription());
             StageOpened?.Invoke(StageNumber, CurrentStage);
+        }
+
+        // 김우진의 ArenaContainment는 플레이어를 방 안(z ≤ 14.05)으로 묶어서 벽 뒤 문 통로에 들어갈 수 없다.
+        // 실행 중에 허용 범위만 통로 끝까지 넓힌다 (업그레이드 메뉴가 씬 값을 되돌려도 영향 없음).
+        void AllowDoorPassages()
+        {
+            float passageEnd = Mathf.Max(redDoor.transform.position.z, blueDoor.transform.position.z) + 3f;
+            foreach (var guard in FindObjectsByType<ArenaContainment>(FindObjectsSortMode.None))
+                guard.maximum.y = Mathf.Max(guard.maximum.y, passageEnd);
         }
 
         void ReleaseRuntimeStage()
