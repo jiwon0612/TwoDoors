@@ -38,6 +38,7 @@ namespace TwoDoors.EditorTools
             if (File.Exists(ScenePath))
                 throw new InvalidOperationException($"{ScenePath}가 이미 있습니다. 다시 만들려면 먼저 삭제하세요.");
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            string previousGuid = BuildListGuid(ScenePath);
 
             EnsureFolder("Assets/CJW/Scenes");
             EnsureFolder(MaterialFolder);
@@ -62,6 +63,7 @@ namespace TwoDoors.EditorTools
             });
 
             EditorSceneManager.SaveScene(scene, ScenePath);
+            KeepGuid(ScenePath, previousGuid);
             ApplyBuildOrder();
             AssetDatabase.SaveAssets();
             Debug.Log($"시작 화면 생성 완료: {ScenePath} (빌드 첫 번째 씬)");
