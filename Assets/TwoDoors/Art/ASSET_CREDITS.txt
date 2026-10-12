@@ -1,0 +1,28 @@
+TwoDoors character prototype - third-party assets
+
+Wooden Mannequin by polyBrain
+Source: https://polybrain.itch.io/wooden-mannequin
+Downloaded via the creator's free/name-your-own-price download on 2026-10-12.
+Creator permits use and modification in projects, except reselling the asset.
+Changes: separated limb geometry, added joint hierarchy, wood material and animations.
+Original: Art/Mannequin/Mannequin.fbx. Do not resell this source asset separately.
+
+Pok by Teh_Bucket
+Source: https://opengameart.org/content/pok
+License: CC0 https://creativecommons.org/publicdomain/zero/1.0/
+Includes CC0 rock textures by Joao Paulo via 3dtextures.me.
+Changes: URP materials, larger scale, idle/walk/attack/death animation clips.
+
+Zombie by Pixelhouse
+Source: https://opengameart.org/content/zombie
+Author site: http://www.pixelhouse.com.ar
+License: CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+Original author instructions are preserved in Art/Zombie/read first.txt.
+Changes: URP material, normalized scale, root translation removed from clips,
+animation controller and gameplay prefab.
+
+These are substitute models, not assets extracted from Red or Blue.
+Original game reference: https://store.steampowered.com/app/3439320/Red_or_Blue/
+User-supplied gameplay reference: https://www.youtube.com/watch?v=it0BKY_G2b0
+Confirmed reference trait: golem is very slow and durable (approximately 02:48).
+Prototype health, movement speeds and damage values are adjustable estimates.
