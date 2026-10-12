@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using TwoDoors.Characters;
+using TwoDoors.Items;
+using UnityEngine.AI;
 using UnityEngine;
 
 namespace TwoDoors.Events
@@ -31,6 +33,21 @@ namespace TwoDoors.Events
         float pendingHealth;
 
         public PlayerCharacter Player => player;
+        public int AliveEnemyCount
+        {
+            get { int count = 0; foreach (var enemy in spawnedZombies) if (enemy && !enemy.IsDead) count++; return count; }
+        }
+        public bool IsPlayerAlive => player && !player.IsDead;
+
+        public bool SpendItem(ItemKind kind, int amount) => player.Inventory.Consume(kind, amount);
+
+        public void GiveItem(ItemKind kind, int amount)
+        {
+            if (!IsPlayerAlive || amount <= 0) return;
+            int added = player.Inventory.Add(kind, amount);
+            if (kind == ItemKind.Pistol && added > 0) player.OnPistolCollected();
+            player.Inventory.Notify(added > 0 ? $"{PlayerInventory.Label(kind)} +{added}" : "Inventory full / already owned");
+        }
 
         void Awake()
         {
@@ -71,8 +88,12 @@ namespace TwoDoors.Events
 
             for (int i = 0; i < count; i++)
             {
-                var point = zombieSpawnPoints[i % zombieSpawnPoints.Length];
-                var zombie = Instantiate(prefab, point.position, point.rotation, transform);
+                int index = spawnedZombies.Count;
+                var point = zombieSpawnPoints[index % zombieSpawnPoints.Length];
+                int ring = index / zombieSpawnPoints.Length;
+                Vector3 position = point.position + new Vector3((ring % 2 == 0 ? 1 : -1) * ring * 1.6f, 0, -ring * 1.8f);
+                if (NavMesh.SamplePosition(position, out var hit, 3f, NavMesh.AllAreas)) position = hit.position;
+                var zombie = Instantiate(prefab, position, point.rotation, transform);
                 zombie.SetTarget(player);
                 spawnedZombies.Add(zombie);
             }

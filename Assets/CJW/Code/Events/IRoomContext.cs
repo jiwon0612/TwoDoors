@@ -1,4 +1,5 @@
 using TwoDoors.Characters;
+using TwoDoors.Items;
 
 namespace TwoDoors.Events
 {
@@ -8,6 +9,10 @@ namespace TwoDoors.Events
     /// </summary>
     public interface IRoomContext
     {
+        int AliveEnemyCount { get; }
+        bool IsPlayerAlive { get; }
+        void GiveItem(ItemKind kind, int amount);
+        bool SpendItem(ItemKind kind, int amount);
         void ChangeHealth(float amount);
         void SetLights(bool on);
         /// <param name="prefab">null이면 방의 기본 좀비 프리팹 사용.</param>

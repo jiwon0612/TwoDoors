@@ -23,15 +23,11 @@ namespace TwoDoors.EditorTools
         const string SourceScene = "Assets/TwoDoors/Scenes/CharacterTest.unity";
         const string ScenePath = "Assets/CJW/Scenes/Game.unity";
         const string MaterialFolder = "Assets/CJW/Generated/Materials";
-        const string StageFolder = "Assets/CJW/Data/Stages";
+        const string StageFolder = EventCatalogV2.Root;
         const string ZombiePrefab = "Assets/TwoDoors/Prefabs/Zombie.prefab";
 
         // 기본 진행 순서. 지름길(단계 건너뛰기)이 마지막 단계를 건너뛰어 바로 탈출하지 않도록 중간에 둔다.
-        static readonly string[] StageOrder =
-        {
-            "01_Toll", "03_Blackout", "04_ShortAndHard", "02_RiskyHeal",
-            "07_Shortcut", "06_DarkReward", "10_HealZone", "08_FinalDeal",
-        };
+        static readonly string[] StageOrder = EventCatalogV2.Order;
 
         // 좀비 감지 거리(14) 안에 들어오도록 플레이어 시작 위치 (0,0,-6) 기준 약 13m 이내
         static readonly Vector3[] ZombieSpawns = { new(-7, 0, 5), new(7, 0, 5), new(0, 0, 7) };
@@ -102,7 +98,7 @@ namespace TwoDoors.EditorTools
             Set(stages, so =>
             {
                 var choices = StageOrder
-                    .Select(id => AssetDatabase.LoadAssetAtPath<StageChoice>($"{StageFolder}/{id}/{id}.asset"))
+                    .Select(id => AssetDatabase.LoadAssetAtPath<StageChoice>($"{StageFolder}/{id}.asset"))
                     .Where(c => c != null).ToArray();
                 SetArray(so.FindProperty("stages"), choices);
                 so.FindProperty("room").objectReferenceValue = room;

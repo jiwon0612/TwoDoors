@@ -14,7 +14,9 @@ namespace TwoDoors.Editor
         private static TMP_FontAsset Font => AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset");
 
         [MenuItem("TwoDoors/Add Inventory To Character Test")]
-        public static void Install()
+        public static void Install() => Install(true);
+
+        public static void Install(bool includeDemoPickups)
         {
             if (EditorApplication.isPlaying) throw new System.InvalidOperationException("Stop Play mode first.");
             var player = Object.FindFirstObjectByType<PlayerCharacter>();
@@ -31,7 +33,8 @@ namespace TwoDoors.Editor
             settings.ApplyModifiedPropertiesWithoutUndo();
             var position = player.transform.position;
             player.transform.position = Vector3.zero;
-            PrefabUtility.SaveAsPrefabAsset(player.gameObject,"Assets/TwoDoors/Prefabs/Player.prefab");
+            if (includeDemoPickups)
+                PrefabUtility.SaveAsPrefabAsset(player.gameObject,"Assets/TwoDoors/Prefabs/Player.prefab");
             player.transform.position = position;
 
             if (!Object.FindFirstObjectByType<EventSystem>())
@@ -71,7 +74,8 @@ namespace TwoDoors.Editor
             var controls=hud.transform.Find("Controls").GetComponent<TMP_Text>();
             controls.text="WASD Move   SHIFT Sprint   E Pick up   TAB Inventory   LMB Attack   R Reload   1/2 Weapons   3 Heal   F Light   ESC Pause   F5 Restart";
 
-            var items = new GameObject("DemoPickups");
+            var items = includeDemoPickups ? new GameObject("DemoPickups") : null;
+            if (includeDemoPickups)
             for(int i=0;i<4;i++)
             {
                 var kind=new[]{ItemKind.Pistol,ItemKind.Ammo,ItemKind.Medkit,ItemKind.Flashlight}[i];

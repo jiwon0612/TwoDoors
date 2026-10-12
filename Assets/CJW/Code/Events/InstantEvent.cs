@@ -11,7 +11,7 @@ namespace TwoDoors.Events
 
         protected override void AppendConditionDescription(List<string> lines)
         {
-            if (ZombieCount == 0) lines.Add("좀비 없이 바로 통과");
+            if (EnemyCount == 0) lines.Add("전투 없이 바로 통과");
         }
     }
 }
