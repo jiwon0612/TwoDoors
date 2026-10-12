@@ -21,8 +21,8 @@ namespace TwoDoors.EditorTools
     static class GameSceneBuilder
     {
         const string SourceScene = "Assets/TwoDoors/Scenes/CharacterTest.unity";
-        const string ScenePath = "Assets/CJW/Scenes/Game.unity";
-        const string MaterialFolder = "Assets/CJW/Generated/Materials";
+        internal const string ScenePath = "Assets/CJW/Scenes/Game.unity";
+        internal const string MaterialFolder = "Assets/CJW/Generated/Materials";
         const string StageFolder = "Assets/CJW/Data/Stages";
         const string ZombiePrefab = "Assets/TwoDoors/Prefabs/Zombie.prefab";
 
@@ -118,12 +118,19 @@ namespace TwoDoors.EditorTools
             });
 
             EditorSceneManager.SaveScene(scene);
-            var builds = EditorBuildSettings.scenes.Where(s => s.path != ScenePath).ToList();
-            builds.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
-            EditorBuildSettings.scenes = builds.ToArray();
+            ApplyBuildOrder();
             AssetDatabase.SaveAssets();
             Selection.activeGameObject = managers;
-            Debug.Log($"게임 씬 생성 완료: {ScenePath} (빌드 첫 번째 씬으로 등록)");
+            Debug.Log($"게임 씬 생성 완료: {ScenePath} (빌드 씬 목록에 등록)");
+        }
+
+        /// <summary>빌드 씬 순서를 시작 화면 → 게임 → 나머지로 맞춘다. 없는 씬은 건너뛴다.</summary>
+        internal static void ApplyBuildOrder()
+        {
+            var first = new[] { TitleSceneBuilder.ScenePath, ScenePath }.Where(File.Exists).ToArray();
+            var builds = first.Select(p => new EditorBuildSettingsScene(p, true)).ToList();
+            builds.AddRange(EditorBuildSettings.scenes.Where(s => !first.Contains(s.path)));
+            EditorBuildSettings.scenes = builds.ToArray();
         }
 
         static StageDoor MakeDoor(Transform parent, DoorColor color, float x, Color tint, StageManager manager)
@@ -207,7 +214,7 @@ namespace TwoDoors.EditorTools
             return t;
         }
 
-        static GameObject Box(string name, Transform parent, Vector3 localPosition, Vector3 size, Material material, bool collider = false)
+        internal static GameObject Box(string name, Transform parent, Vector3 localPosition, Vector3 size, Material material, bool collider = false)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = name;
@@ -219,7 +226,7 @@ namespace TwoDoors.EditorTools
             return go;
         }
 
-        static Material Mat(string name, Color color, Color? emission = null)
+        internal static Material Mat(string name, Color color, Color? emission = null, float? smoothness = null)
         {
             string path = $"{MaterialFolder}/{name}.mat";
             var m = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -227,6 +234,7 @@ namespace TwoDoors.EditorTools
 
             m = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = name };
             m.SetColor("_BaseColor", color);
+            if (smoothness.HasValue) m.SetFloat("_Smoothness", smoothness.Value);
             AssetDatabase.CreateAsset(m, path);
             if (emission.HasValue)
             {
@@ -240,20 +248,20 @@ namespace TwoDoors.EditorTools
             return m;
         }
 
-        static void Set(Object target, Action<SerializedObject> edit)
+        internal static void Set(Object target, Action<SerializedObject> edit)
         {
             var so = new SerializedObject(target);
             edit(so);
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        static void SetArray(SerializedProperty array, Object[] values)
+        internal static void SetArray(SerializedProperty array, Object[] values)
         {
             array.arraySize = values.Length;
             for (int i = 0; i < values.Length; i++) array.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
         }
 
-        static void EnsureFolder(string path)
+        internal static void EnsureFolder(string path)
         {
             if (AssetDatabase.IsValidFolder(path)) return;
             int slash = path.LastIndexOf('/');
