@@ -42,6 +42,12 @@ A door choice is a `StageChoice` ScriptableObject that holds two `RoomEvent` ass
 
 `StageManager` holds the ordered `StageChoice[]` and a phase (`Choosing` → `Running` → back to `Choosing`, or `Escaped`/`GameOver`). When the player enters an open `StageDoor` trigger, it calls `ChooseDoor`. That closes both doors, teleports the player to `playerSpawnPoint` (with the CharacterController disabled during the move, since the room is reused), and runs the event. When the event completes, the manager advances 1 stage (2 if `SkipNextStage`). Escape happens when `EscapeOnClear` is set or after the last stage. Death sets the phase to GameOver. `Restart()` reloads the scene. HUD can use the events `StageOpened`, `DoorChosen`, `Escaped` and `GameOver`, plus `StageNumber`/`TotalStages` and `RoomEventRunner.RemainingTime`.
 
+## Game scene
+
+The playable scene is `Assets/CJW/Scenes/Game.unity`, built by **Tools > TwoDoors > Build Game Scene** (`GameSceneBuilder`). The builder copies 김우진's `CharacterTest` scene (room, NavMesh, player, HUD), removes the demo enemies, adds the doors, managers, spawn points, buttons and heal zone, wires every reference, and registers the scene as build index 0. It refuses to overwrite an existing `Game.unity`, so delete the scene (and `Assets/CJW/Generated/` if materials changed) before rebuilding. `StageDebugHud` is a temporary IMGUI HUD that also restarts on R; remove it once the real UI exists. Door labels are Korean, so `KoreanFontFallback` registers the Windows "Malgun Gothic" font as a TMP fallback at runtime. In the editor Scene view, Korean shows as □.
+
+**Live testing:** the Unity CLI (`unity command ... eval --code '...'`) can drive the open Editor: play mode, `StageManager.ChooseDoor`, reflection on `OpenStage(i)` to jump stages, and `capture_game_view`, which saves under `Assets/`, so delete the captures afterwards. The play loop **stalls when the Editor window is unfocused** (`Time.frameCount` stops), and focus changes can toggle the player's Esc pause (`Time.timeScale = 0`). Check both before treating a stuck timer as a bug.
+
 ## Game design (from 기획서 "두 개의 문")
 
 A single-player, first-person PC survival game based on *Red or Blue*. Each stage has a **red door and a blue door**, each with a written trade-off. Walking through a door commits the choice and applies its effect to the **next room**.

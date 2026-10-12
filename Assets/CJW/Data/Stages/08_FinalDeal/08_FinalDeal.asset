@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1ea2cb12a8261f459e0f224bb9a50ba, type: 3}
+  m_Name: 08_FinalDeal
+  m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.StageChoice
+  title: "\uB9C8\uC9C0\uB9C9 \uAC70\uB798"
+  redDoor: {fileID: 11400000, guid: 91ad1988cf80f864a8353e39a9017a17, type: 2}
+  blueDoor: {fileID: 11400000, guid: 527ee9d9a91e644439708541fc280f52, type: 2}

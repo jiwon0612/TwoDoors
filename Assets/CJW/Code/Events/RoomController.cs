@@ -12,7 +12,8 @@ namespace TwoDoors.Events
 
         [Header("조명")]
         [SerializeField] Light[] roomLights;
-        [SerializeField, Range(0f, 1f)] float darkAmbientIntensity = 0.05f;
+        [Tooltip("조명이 꺼졌을 때 주변광 배율.")]
+        [SerializeField, Range(0f, 1f)] float darkAmbientScale = 0.05f;
 
         [Header("좀비")]
         [Tooltip("NavMesh가 구워진 방이어야 추적한다.")]
@@ -25,6 +26,7 @@ namespace TwoDoors.Events
 
         readonly List<EnemyCharacter> spawnedZombies = new();
         float defaultAmbientIntensity;
+        Color defaultAmbientLight;
         // CharacterBase 체력은 정수라서, 회복 구역처럼 프레임마다 들어오는 소수 변화량을 모았다가 적용한다.
         float pendingHealth;
 
@@ -34,6 +36,7 @@ namespace TwoDoors.Events
         {
             if (!player) player = FindFirstObjectByType<PlayerCharacter>();
             defaultAmbientIntensity = RenderSettings.ambientIntensity;
+            defaultAmbientLight = RenderSettings.ambientLight;
             ResetRoom();
         }
 
@@ -51,7 +54,10 @@ namespace TwoDoors.Events
         public void SetLights(bool on)
         {
             foreach (var l in roomLights) l.enabled = on;
-            RenderSettings.ambientIntensity = on ? defaultAmbientIntensity : darkAmbientIntensity;
+            // Skybox 모드는 ambientIntensity, Flat(단색) 모드는 ambientLight 색을 쓰므로 둘 다 조절한다.
+            float scale = on ? 1f : darkAmbientScale;
+            RenderSettings.ambientIntensity = defaultAmbientIntensity * scale;
+            RenderSettings.ambientLight = defaultAmbientLight * scale;
         }
 
         public void SpawnZombies(EnemyCharacter prefab, int count)

@@ -7,13 +7,19 @@ namespace TwoDoors.Events
     [RequireComponent(typeof(Collider))]
     public class RoomButton : MonoBehaviour
     {
+        [Tooltip("눌리면 색이 바뀔 렌더러 (선택).")]
+        [SerializeField] Renderer indicator;
+        [SerializeField] Color pressedColor = Color.green;
         [SerializeField] UnityEvent onPressed;
+
+        Color? idleColor;
 
         public bool IsPressed { get; private set; }
 
         public void SetActive(bool active)
         {
             IsPressed = false;
+            if (indicator && idleColor.HasValue) indicator.material.color = idleColor.Value;
             gameObject.SetActive(active);
         }
 
@@ -21,6 +27,11 @@ namespace TwoDoors.Events
         {
             if (IsPressed || !other.CompareTag("Player")) return;
             IsPressed = true;
+            if (indicator)
+            {
+                idleColor ??= indicator.material.color;
+                indicator.material.color = pressedColor;
+            }
             onPressed.Invoke();
         }
     }

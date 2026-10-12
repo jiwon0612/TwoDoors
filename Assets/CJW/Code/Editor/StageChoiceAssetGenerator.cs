@@ -14,7 +14,7 @@ namespace TwoDoors.EditorTools
         const string Root = "Assets/CJW/Data/Stages";
 
         [MenuItem("Tools/TwoDoors/Generate Stage Choices")]
-        static void Generate()
+        internal static void Generate()
         {
             EnsureFolder(Root);
 

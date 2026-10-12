@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1ea2cb12a8261f459e0f224bb9a50ba, type: 3}
+  m_Name: 01_Toll
+  m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.StageChoice
+  title: "\uD1B5\uD589\uB8CC"
+  redDoor: {fileID: 11400000, guid: 65e164ad2c1dcef4a8e7f165efad05f7, type: 2}
+  blueDoor: {fileID: 11400000, guid: 62811e74b6ad71a42bb597f2ca9d2012, type: 2}

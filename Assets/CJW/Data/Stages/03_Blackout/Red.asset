@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b46f9dc752e1c694a9755d99b17de431, type: 3}
+  m_Name: Red
+  m_EditorClassIdentifier: Assembly-CSharp::TwoDoors.Events.SurvivalEvent
+  healthChange: 0
+  lightsOff: 1
+  zombieCount: 1
+  zombiePrefab: {fileID: 0}
+  skipNextStage: 0
+  escapeOnClear: 0
+  customDescription: 
+  surviveTime: 10
